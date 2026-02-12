@@ -80,6 +80,46 @@ body.no-scroll {
   justify-content: center;
 }
 
+.prestart-screen {
+  background:
+    radial-gradient(circle at 16% 10%, rgba(255, 214, 226, 0.95), transparent 40%),
+    radial-gradient(circle at 84% 88%, rgba(209, 92, 122, 0.34), transparent 45%),
+    linear-gradient(165deg, #fff0f4 0%, #f8d5de 52%, #f2bdcc 100%);
+}
+
+.prestart-panel {
+  min-height: min(82vh, 620px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: min(92vw, 560px);
+}
+
+.prestart-instruction {
+  margin-top: 8px;
+  font-size: 1rem;
+  color: rgba(43, 31, 30, 0.85);
+}
+
+.prestart-fullscreen {
+  margin-top: 10px;
+}
+
+.prestart-note {
+  margin-top: 26px;
+  font-size: 1.05rem;
+  color: rgba(55, 24, 33, 0.9);
+}
+
+.prestart-actions {
+  margin-top: auto;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding-top: 26px;
+}
+
 video.panel {
   width: min(92vw, 520px);
   height: auto;
