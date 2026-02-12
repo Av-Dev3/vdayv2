@@ -1,6 +1,6 @@
-﻿async function loadText(path, fallback = "") {
+﻿async function loadText(path, fallback = "", resolve = (v) => v) {
   try {
-    const res = await fetch(path);
+    const res = await fetch(resolve(path));
     if (!res.ok) throw new Error("load failed");
     return await res.text();
   } catch (err) {
@@ -8,9 +8,9 @@
   }
 }
 
-async function loadJson(path, fallback = []) {
+async function loadJson(path, fallback = [], resolve = (v) => v) {
   try {
-    const res = await fetch(path);
+    const res = await fetch(resolve(path));
     if (!res.ok) throw new Error("load failed");
     return await res.json();
   } catch (err) {
@@ -265,8 +265,8 @@ export function mountSong(container, ctx) {
   container.appendChild(el);
 
   Promise.all([
-    loadText("data/lyrics.lrc"),
-    loadJson("data/photos.json"),
+    loadText("data/lyrics.lrc", "", media),
+    loadJson("data/photos.json", [], media),
   ]).then(([lrcText, photos]) => {
     lyrics = parseLrc(lrcText);
     currentLine.textContent = "";
@@ -282,3 +282,5 @@ export function mountSong(container, ctx) {
     cleanupSlides();
   };
 }
+
+
