@@ -1,0 +1,4051 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Aftermath</title>
+  <style>
+    @font-face {
+      font-family: "Dark Side of the Moon";
+      src: url("Dark Side of the Moon.ttf") format("truetype");
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "Plain Germanica";
+      src: url("Plain Germanica.ttf") format("truetype");
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+    }
+
+    .bg-wrap {
+      position: fixed;
+      inset: 0;
+      background: #000;
+    }
+
+    .bg-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transform: translateZ(0);
+      will-change: transform;
+      filter: saturate(0.92) contrast(1.05);
+      animation: video-dim 1.8s ease 5s forwards;
+    }
+
+    .lyric-stage {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 20;
+    }
+
+    .lyric-word-pop {
+      position: absolute;
+      max-width: min(84vw, 980px);
+      color: rgba(238, 230, 232, 0.88);
+      font-size: clamp(28px, 6.4vw, 68px);
+      line-height: 1.1;
+      letter-spacing: 0.02em;
+      text-align: center;
+      text-shadow: 0 3px 16px rgba(0, 0, 0, 0.72);
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.82);
+      transition: opacity 0.32s ease, transform 0.32s ease, color 0.2s ease, text-shadow 0.2s ease;
+      font-family: "Dark Side of the Moon", "Franklin Gothic Heavy", "Arial Black", "Impact", sans-serif;
+      font-weight: 400;
+      word-wrap: break-word;
+    }
+
+    .lyric-word-pop.show {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .lyric-word-pop.fade {
+      opacity: 0.2;
+      transform: translate(-50%, -50%) scale(0.9);
+    }
+
+    .phrase-word {
+      color: rgba(238, 230, 232, 0.88);
+      transition: color 0.16s ease, text-shadow 0.16s ease, transform 0.16s ease;
+      display: inline-block;
+      margin-right: 0.3em;
+    }
+
+    .phrase-word.hot {
+      color: #a30016;
+      text-shadow: 0 0 14px rgba(163, 0, 22, 0.78);
+      transform: scale(1.05);
+    }
+
+    .audio-gate {
+      position: fixed;
+      inset: 0;
+      z-index: 40;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(3px);
+    }
+
+    .audio-gate button {
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      border-radius: 999px;
+      padding: 12px 22px;
+      background: rgba(150, 0, 0, 0.9);
+      color: #fff;
+      font-size: 1rem;
+      letter-spacing: 0.03em;
+      cursor: pointer;
+    }
+
+    .audio-gate .skip-test {
+      margin-top: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 999px;
+      padding: 10px 18px;
+      background: rgba(20, 20, 20, 0.55);
+      color: #fff;
+      font-size: 0.85rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .skip-btn {
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      z-index: 65;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      border-radius: 999px;
+      padding: 8px 16px;
+      background: rgba(12, 10, 10, 0.6);
+      color: rgba(245, 235, 236, 0.92);
+      font-size: 0.85rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .skip-btn.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .scream-layer {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 12;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.7s ease;
+      filter: saturate(0.85) contrast(1.08);
+      background: #000;
+    }
+
+    .scream-layer.show {
+      opacity: 0.82;
+    }
+
+    .scroll-hint {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%);
+      z-index: 60;
+      opacity: 0;
+      transition: opacity 0.5s ease, transform 0.5s ease;
+      color: rgba(245, 235, 236, 0.9);
+      font-family: "Dark Side of the Moon", "Franklin Gothic Heavy", "Arial Black", "Impact", sans-serif;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-size: 0.9rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      pointer-events: none;
+    }
+
+    .scroll-hint.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(-6px);
+    }
+
+    .scroll-hint .arrow {
+      width: 12px;
+      height: 12px;
+      border-left: 2px solid rgba(245, 235, 236, 0.8);
+      border-bottom: 2px solid rgba(245, 235, 236, 0.8);
+      transform: rotate(-45deg);
+      animation: arrow-bob 1.2s ease-in-out infinite;
+    }
+
+    @keyframes arrow-bob {
+      0%, 100% { transform: rotate(-45deg) translateY(0); }
+      50% { transform: rotate(-45deg) translateY(6px); }
+    }
+
+    .riddle-panel {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 70;
+      background: rgba(8, 6, 7, 0.96);
+      color: #f1e7ea;
+      padding: 28px 24px 48px;
+      border-top: 1px solid rgba(163, 0, 22, 0.4);
+      transform: translateY(100%);
+      transition: transform 0.38s ease;
+      text-align: center;
+      font-family: "Dark Side of the Moon", "Franklin Gothic Heavy", "Arial Black", "Impact", sans-serif;
+      letter-spacing: 0.03em;
+    }
+
+    .riddle-panel.show {
+      transform: translateY(0);
+    }
+
+    .riddle-panel p {
+      margin: 0 0 16px;
+      font-size: 1.1rem;
+      line-height: 1.5;
+      text-transform: uppercase;
+    }
+
+    .riddle-panel .question {
+      font-size: 1.2rem;
+      color: #a30016;
+      letter-spacing: 0.06em;
+    }
+
+    .next-screen,
+    .final-screen,
+    .music-next-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      background: radial-gradient(circle at 50% 20%, #2a0f1a 0%, #14070b 55%, #080305 100%);
+      color: #f1e7ea;
+      padding: 28px;
+      font-family: "Dark Side of the Moon", "Franklin Gothic Heavy", "Arial Black", "Impact", sans-serif;
+      letter-spacing: 0.03em;
+    }
+
+    .next-screen.show,
+    .final-screen.show,
+    .music-next-screen.show {
+      display: flex;
+    }
+
+    .next-content {
+      max-width: 760px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      align-items: center;
+    }
+
+    .next-title {
+      margin: 0;
+      font-size: clamp(1.2rem, 4.8vw, 2.4rem);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #ff9aba;
+      text-shadow: 0 8px 20px rgba(216, 92, 117, 0.24);
+    }
+
+    .next-content p {
+      margin: 0;
+      font-size: 1.05rem;
+      line-height: 1.55;
+      text-transform: uppercase;
+    }
+
+    .dial-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .dial {
+      width: 88px;
+      height: 62px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: rgba(12, 10, 10, 0.7);
+      color: #f1e7ea;
+      font-size: 1.2rem;
+      text-align: center;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-family: "Dark Side of the Moon", "Franklin Gothic Heavy", "Arial Black", "Impact", sans-serif;
+    }
+
+    .dial-sep {
+      font-size: 1.6rem;
+      color: rgba(241, 231, 234, 0.7);
+    }
+
+    .dial-status {
+      min-height: 20px;
+      font-size: 0.9rem;
+      letter-spacing: 0.05em;
+      color: rgba(245, 235, 236, 0.8);
+      text-transform: uppercase;
+    }
+
+    .page-flip {
+      position: fixed;
+      inset: 0;
+      z-index: 95;
+      pointer-events: none;
+      display: none;
+      overflow: hidden;
+    }
+
+    .page-flip.show {
+      display: block;
+    }
+
+    .intro-screen {
+      width: 100%;
+      height: 200vh;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transform: translateY(0);
+    }
+
+    .intro-screen.run {
+      animation: wave-slide 2.2s ease-in-out forwards;
+    }
+
+    .intro-screen__title {
+      height: 100vh;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #ff5d88;
+    }
+
+    .intro-screen__title div {
+      font-size: 2.2rem;
+      color: #ffffff;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .intro-screen__shape {
+      width: 100%;
+      margin: -0.5rem 0 0 0;
+      position: relative;
+      background: #ff5d88;
+    }
+
+    .intro-screen__shape .shape {
+      height: 100vh;
+      width: 100%;
+      display: block;
+      fill: #ff5d88;
+    }
+
+    @keyframes wave-slide {
+      0% { transform: translateY(0); }
+      85% { transform: translateY(-100vh); }
+      100% { transform: translateY(-200vh); }
+    }
+
+    .final-screen {
+      background:
+        radial-gradient(circle at 20% 10%, rgba(255, 200, 218, 0.95), transparent 55%),
+        radial-gradient(circle at 80% 0%, rgba(255, 160, 188, 0.7), transparent 55%),
+        linear-gradient(180deg, #fff1f6 0%, #ffd2de 45%, #ffb7c8 100%);
+      color: #5a1a2a;
+    }
+
+    .final-screen .final-card {
+      background: rgba(255, 255, 255, 0.85);
+      border-radius: 22px;
+      padding: 26px 22px;
+      box-shadow: 0 20px 50px rgba(90, 20, 40, 0.25);
+      max-width: 760px;
+      width: min(92vw, 760px);
+    }
+
+    .final-scroll {
+      width: min(96vw, 920px);
+      max-height: 90vh;
+      overflow-y: auto;
+      overflow-x: visible;
+      display: grid;
+      gap: 22px;
+      padding: 12px 4px 22px;
+      scroll-behavior: smooth;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+    }
+
+    .final-scroll::-webkit-scrollbar {
+      width: 0;
+      height: 0;
+    }
+
+    .top-note,
+    .poem-note,
+    .notes-note {
+      --note-reveal: 0%;
+      position: relative;
+      background: #fffefb;
+      border-radius: 18px;
+      padding: 26px 20px 26px 34px;
+      box-shadow: 0 24px 48px rgba(90, 20, 40, 0.2);
+      overflow: hidden;
+      border: 1px solid rgba(214, 181, 122, 0.35);
+      opacity: 0;
+      transform: translateX(-140px) rotate(-1.6deg);
+      will-change: transform, opacity;
+      transition: none;
+    }
+
+    .top-note::before,
+    .poem-note::before,
+    .notes-note::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        repeating-linear-gradient(
+          to bottom,
+          transparent 0 29px,
+          rgba(121, 160, 216, 0.32) 29px 31px
+        );
+      background-size: 100% 31px;
+      clip-path: inset(0 0 calc(100% - var(--note-reveal)) 0);
+      pointer-events: none;
+    }
+
+    .note-holes {
+      position: absolute;
+      top: 14px;
+      left: 8px;
+      bottom: 14px;
+      width: 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 2;
+    }
+
+    .note-holes span {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #f0ede8;
+      box-shadow: inset 0 2px 3px rgba(120, 90, 70, 0.2);
+    }
+
+    .note-margin {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 24px;
+      width: 2px;
+      background: rgba(214, 88, 88, 0.4);
+      clip-path: inset(0 0 calc(100% - var(--note-reveal)) 0);
+      pointer-events: none;
+    }
+
+    .top-note .note-text,
+    .poem-note .note-text,
+    .notes-note .note-text {
+      position: relative;
+      z-index: 2;
+      line-height: 31px;
+      font-family: "Comic Sans MS", "Segoe Print", "Bradley Hand", cursive;
+      font-size: 1.02rem;
+      color: #2f2120;
+      letter-spacing: 0.01em;
+      margin: 0;
+    }
+
+    .top-note .note-word,
+    .poem-note .note-word,
+    .notes-note .note-word {
+      display: inline-block;
+      opacity: 0;
+      transform: translateY(8px);
+      margin-right: 6px;
+    }
+
+    .top-note.inview,
+    .poem-note.inview,
+    .notes-note.inview {
+      opacity: 1;
+      transform: translateX(0) rotate(0deg);
+      transition: none;
+    }
+
+    .top-note.inview,
+    .poem-note.inview,
+    .notes-note.inview {
+      --note-reveal: 100%;
+    }
+
+    .poem-note,
+    .notes-note[data-side="right"] {
+      transform: translateX(140px) rotate(1.6deg);
+    }
+
+    .photo-block {
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 18px 36px rgba(90, 20, 40, 0.22);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      background: rgba(255, 255, 255, 0.85);
+      width: 100%;
+      max-width: 100%;
+      margin: 0 auto;
+      opacity: 0;
+      transform: translateY(-120px) scale(0.98);
+      transition: none;
+      will-change: transform, opacity;
+    }
+
+    .photo-block.inview {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    .photo-block img,
+    .photo-block video {
+      display: block;
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+      background: #000;
+    }
+
+    .riddle-card {
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 18px;
+      padding: 22px;
+      box-shadow: 0 20px 40px rgba(90, 20, 40, 0.22);
+      border: 1px solid rgba(214, 88, 88, 0.3);
+      text-align: center;
+      opacity: 0;
+      transform: translateX(140px) rotate(1.6deg);
+      transition: none;
+      will-change: transform, opacity;
+    }
+
+    .riddle-card.inview {
+      opacity: 1;
+      transform: translateX(0) rotate(0deg);
+    }
+
+    .riddle-card p {
+      margin: 0 0 12px;
+      line-height: 1.6;
+      font-size: 1rem;
+    }
+
+    .riddle-card .answer {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+
+    .riddle-card input {
+      width: min(84vw, 320px);
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(214, 88, 88, 0.3);
+      background: rgba(255, 255, 255, 0.7);
+      color: #5a1a2a;
+      font-size: 0.95rem;
+    }
+
+    .riddle-card button {
+      border: 1px solid rgba(214, 88, 88, 0.5);
+      border-radius: 999px;
+      padding: 8px 16px;
+      background: #d85c75;
+      color: #fff;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
+    .riddle-card .status {
+      min-height: 20px;
+      font-size: 0.85rem;
+      color: rgba(90, 20, 40, 0.8);
+    }
+
+    .continue-wrap {
+      display: flex;
+      justify-content: center;
+      padding: 6px 0 12px;
+      opacity: 0;
+      transform: translateY(16px);
+    }
+
+    .continue-wrap.inview {
+      opacity: 1;
+      transform: translateY(0);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+
+    .continue-btn {
+      border: 1px solid rgba(216, 92, 117, 0.45);
+      border-radius: 999px;
+      padding: 11px 24px;
+      background: linear-gradient(135deg, #ff8fb3, #d85c75);
+      color: #fff;
+      font-size: 0.92rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      box-shadow: 0 14px 28px rgba(216, 92, 117, 0.32);
+      font-family: "Dark Side of the Moon", "Franklin Gothic Heavy", "Arial Black", "Impact", sans-serif;
+    }
+
+    .music-next-screen {
+      background: #ffffff;
+      color: #111111;
+      z-index: 140;
+      padding: 0;
+    }
+
+    .music-next-screen .white-screen {
+      width: 100%;
+      height: 100%;
+      background: #ffffff;
+      display: grid;
+      place-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .white-title {
+      position: absolute;
+      top: 6.5vh;
+      left: 50%;
+      transform: translateX(-50%);
+      margin: 0;
+      font-size: clamp(1.2rem, 4.8vw, 2.4rem);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #d85c75;
+      text-shadow: 0 6px 18px rgba(216, 92, 117, 0.2);
+      font-family: "Dark Side of the Moon", "Franklin Gothic Heavy", "Arial Black", "Impact", sans-serif;
+      z-index: 2;
+      text-align: center;
+      width: 92vw;
+    }
+
+    .white-rotator {
+      width: min(86vw, 420px);
+      aspect-ratio: 4 / 5;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      box-shadow: 0 20px 42px rgba(0, 0, 0, 0.16);
+      background: #f6f6f6;
+      opacity: 0;
+      transform: scale(0.96);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+
+    .white-rotator.show {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .rotator-slice {
+      position: relative;
+      width: 100%;
+      height: 33.3334%;
+      overflow: hidden;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.22);
+      background: #ececec;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .rotator-slice:last-child {
+      border-bottom: 0;
+    }
+
+    .slice-inner {
+      position: absolute;
+      inset: 0;
+      background-repeat: no-repeat;
+      background-size: 100% 300%;
+      transform: rotate(var(--rot, 0deg));
+      transform-origin: 50% 50%;
+      filter: contrast(1.08) saturate(1.12) hue-rotate(8deg) blur(0.35px);
+      transition: transform 0.35s ease, filter 0.35s ease;
+    }
+
+    .rotator-slice[data-slice="0"] .slice-inner {
+      background-position: center 0%;
+    }
+
+    .rotator-slice[data-slice="1"] .slice-inner {
+      background-position: center 50%;
+    }
+
+    .rotator-slice[data-slice="2"] .slice-inner {
+      background-position: center 100%;
+    }
+
+    .white-rotator.fixed .slice-inner {
+      filter: contrast(1) saturate(1) hue-rotate(0deg) blur(0);
+    }
+
+    .white-rotator-status {
+      position: absolute;
+      left: 50%;
+      top: calc(50% + min(44vw, 220px));
+      transform: translateX(-50%);
+      min-height: 18px;
+      font-size: 0.78rem;
+      color: #333;
+      letter-spacing: 0.04em;
+    }
+
+    .white-start {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      border: 1px solid rgba(255, 255, 255, 0.75);
+      border-radius: 999px;
+      padding: 12px 26px;
+      background: linear-gradient(135deg, #ff8fb3, #d85c75);
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease, transform 0.25s ease, box-shadow 0.25s ease;
+      box-shadow: 0 14px 30px rgba(216, 92, 117, 0.35);
+      font-family: "Dark Side of the Moon", "Franklin Gothic Heavy", "Arial Black", "Impact", sans-serif;
+    }
+
+    .white-start.show {
+      opacity: 1;
+      pointer-events: auto;
+      animation: start-pop 1.1s ease infinite alternate;
+    }
+
+    .white-start:hover {
+      transform: translate(-50%, -50%) scale(1.04);
+      box-shadow: 0 18px 34px rgba(216, 92, 117, 0.42);
+    }
+
+    @keyframes start-pop {
+      0% { box-shadow: 0 12px 24px rgba(216, 92, 117, 0.28); }
+      100% { box-shadow: 0 18px 36px rgba(216, 92, 117, 0.5); }
+    }
+
+    .music-shake {
+      animation: music-shake 0.18s linear infinite;
+    }
+
+    @keyframes music-shake {
+      0% { transform: translate(0, 0) rotate(0deg); }
+      25% { transform: translate(-2px, 2px) rotate(-0.2deg); }
+      50% { transform: translate(2px, -1px) rotate(0.2deg); }
+      75% { transform: translate(-1px, -2px) rotate(-0.2deg); }
+      100% { transform: translate(1px, 1px) rotate(0.2deg); }
+    }
+
+    .music-note-transition {
+      position: fixed;
+      inset: 0;
+      z-index: 98;
+      display: none;
+      pointer-events: none;
+      overflow: hidden;
+      background: rgba(14, 8, 12, 0.92);
+    }
+
+    .music-note-transition.show {
+      display: block;
+    }
+
+    .music-note {
+      position: absolute;
+      left: -10vw;
+      top: 50%;
+      color: rgba(255, 192, 214, 0.95);
+      font-size: clamp(26px, 7vw, 74px);
+      text-shadow: 0 0 14px rgba(216, 92, 117, 0.65);
+      animation: note-parade 1.5s linear forwards;
+      transform: translateY(-50%);
+      opacity: 0;
+    }
+
+    @keyframes note-parade {
+      0% { transform: translate(-10vw, -50%) scale(0.7) rotate(-18deg); opacity: 0; }
+      15% { opacity: 1; }
+      100% { transform: translate(120vw, -50%) scale(1.15) rotate(8deg); opacity: 0; }
+    }
+
+    .sboys-blackout {
+      position: fixed;
+      inset: 0;
+      z-index: 150;
+      background: #000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 1.1s ease;
+    }
+
+    .sboys-blackout.show {
+      opacity: 1;
+    }
+
+    .sboys-scene {
+      position: fixed;
+      inset: 0;
+      z-index: 145;
+      display: none;
+      overflow: hidden;
+      background: #000;
+    }
+
+    .sboys-scene.show {
+      display: block;
+    }
+
+    .sboys-skip {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      z-index: 8;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      border-radius: 999px;
+      padding: 8px 14px;
+      background: rgba(10, 10, 10, 0.5);
+      color: #fff;
+      font-size: 0.8rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .sboys-bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: brightness(0.45) saturate(0.85);
+    }
+
+    .sboys-clips {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .sboys-clip {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      transition: opacity 0.9s ease;
+      filter: brightness(0.55) contrast(1.05);
+    }
+
+    .sboys-clip.show {
+      opacity: 0.95;
+    }
+
+    .sboys-lyrics {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 3;
+      text-align: center;
+      padding: 0 24px;
+    }
+
+    .sboys-phrase {
+      max-width: 90vw;
+      font-family: "Plain Germanica", "Times New Roman", serif;
+      color: rgba(230, 230, 230, 0.92);
+      font-size: clamp(2rem, 8.2vw, 5.6rem);
+      line-height: 1.02;
+      letter-spacing: 0.02em;
+      opacity: 0;
+      transform: translateY(12px) scale(0.96);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+      text-shadow: 0 10px 24px rgba(0, 0, 0, 0.58);
+    }
+
+    .sboys-phrase.show {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    .sboys-phrase.fade {
+      opacity: 0.2;
+      transform: translateY(-8px) scale(0.98);
+    }
+
+    .sboys-word {
+      display: inline-block;
+      margin-right: 0.24em;
+      color: rgba(235, 235, 235, 0.9);
+      transition: color 0.16s ease, transform 0.16s ease;
+    }
+
+    .sboys-word.hot {
+      color: transparent;
+      background: linear-gradient(135deg, #7a0016 0 50%, #3b3b3b 50% 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      transform: scale(1.05);
+      text-shadow: 0 2px 10px rgba(255, 255, 255, 0.25);
+    }
+
+    .sboys-doubletap {
+      position: absolute;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 5;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .sboys-doubletap.show {
+      display: flex;
+      pointer-events: auto;
+    }
+
+    .sboys-doubletap-text {
+      font-family: "Plain Germanica", "Times New Roman", serif;
+      font-size: clamp(2.2rem, 9vw, 6rem);
+      letter-spacing: 0.06em;
+      color: transparent;
+      background: linear-gradient(135deg, #7a0016 0 50%, #3b3b3b 50% 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      text-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+      animation: doubletap-pulse 1.1s ease-in-out infinite;
+      user-select: none;
+    }
+
+    @keyframes doubletap-pulse {
+      0%, 100% { transform: scale(1); opacity: 0.92; }
+      50% { transform: scale(1.04); opacity: 1; }
+    }
+
+    .sboys-riddle {
+      position: absolute;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 6;
+      padding: 24px;
+      background: rgba(0, 0, 0, 0.45);
+    }
+
+    .sboys-riddle.show {
+      display: flex;
+    }
+
+    .sboys-riddle-card {
+      width: min(92vw, 760px);
+      background: rgba(14, 10, 12, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 16px;
+      padding: 18px 16px;
+      color: #ece6e8;
+      text-align: center;
+      box-shadow: 0 18px 44px rgba(0, 0, 0, 0.45);
+      font-family: "Dark Side of the Moon", "Franklin Gothic Heavy", "Arial Black", "Impact", sans-serif;
+      letter-spacing: 0.03em;
+    }
+
+    .sboys-riddle-card p {
+      margin: 0 0 12px;
+      line-height: 1.55;
+      font-size: 0.95rem;
+    }
+
+    .sboys-riddle-q {
+      color: transparent;
+      background: linear-gradient(135deg, #7a0016 0 50%, #3b3b3b 50% 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      font-size: 1.1rem;
+      margin-bottom: 10px;
+    }
+
+    .sboys-riddle-input {
+      width: min(84vw, 330px);
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      font-size: 0.92rem;
+      text-align: center;
+    }
+
+    .sboys-riddle-actions {
+      margin-top: 10px;
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .sboys-riddle-actions button {
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      border-radius: 999px;
+      padding: 8px 14px;
+      background: rgba(122, 0, 22, 0.7);
+      color: #fff;
+      cursor: pointer;
+      font-size: 0.82rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .sboys-riddle-status,
+    .sboys-riddle-hint {
+      min-height: 18px;
+      font-size: 0.8rem;
+      margin-top: 8px;
+      color: rgba(230, 220, 222, 0.9);
+    }
+
+    .sboys-scene.dj-spin {
+      transform-origin: 50% 50%;
+      animation: dj-spin-out 2.4s cubic-bezier(.2,.8,.2,1) forwards;
+    }
+
+    @keyframes dj-spin-out {
+      0% { transform: rotate(0deg) scale(1); filter: brightness(1); }
+      70% { transform: rotate(1620deg) scale(1.05); filter: brightness(0.9); }
+      100% { transform: rotate(2160deg) scale(0.86); filter: brightness(0.4); opacity: 0; }
+    }
+
+    .dj-next-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 170;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 28px;
+      background:
+        radial-gradient(circle at 20% 10%, rgba(255, 200, 218, 0.95), transparent 55%),
+        radial-gradient(circle at 80% 0%, rgba(255, 160, 188, 0.7), transparent 55%),
+        linear-gradient(180deg, #fff1f6 0%, #ffd2de 45%, #ffb7c8 100%);
+      color: #5a1a2a;
+    }
+
+    .dj-next-screen.show {
+      display: flex;
+    }
+
+    .dj-next-screen.fade-out {
+      opacity: 0;
+      transition: opacity 7s linear;
+    }
+
+    .warning-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 190;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      background: #1b0000;
+      color: #fff;
+      padding: 24px;
+      flex-direction: column;
+      gap: 14px;
+      animation: warning-flash 0.32s steps(2) infinite;
+    }
+
+    .warning-screen.show {
+      display: flex;
+    }
+
+    .warning-screen.fade-out {
+      opacity: 0;
+      transition: opacity 0.45s ease;
+    }
+
+    .warning-title {
+      font-family: "Dark Side of the Moon", "Franklin Gothic Heavy", "Arial Black", "Impact", sans-serif;
+      font-size: clamp(2.2rem, 11vw, 6rem);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin: 0;
+    }
+
+    .warning-sub {
+      min-height: 1.5em;
+      font-family: "Dark Side of the Moon", "Franklin Gothic Heavy", "Arial Black", "Impact", sans-serif;
+      font-size: clamp(1rem, 4.8vw, 2rem);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin: 0;
+      opacity: 0;
+      transition: opacity 0.35s ease;
+    }
+
+    .warning-sub.show {
+      opacity: 1;
+    }
+
+    .warning-start {
+      border: 1px solid rgba(255, 255, 255, 0.45);
+      border-radius: 999px;
+      padding: 10px 18px;
+      background: rgba(255, 255, 255, 0.12);
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 0.88rem;
+      cursor: pointer;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s ease;
+      font-family: "Dark Side of the Moon", "Franklin Gothic Heavy", "Arial Black", "Impact", sans-serif;
+    }
+
+    .warning-start.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    @keyframes warning-flash {
+      0%, 100% { background: #170000; }
+      50% { background: #7a0000; }
+    }
+
+    .spicy-scene {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      display: none;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 18% 8%, rgba(150, 0, 22, 0.4), transparent 46%),
+        radial-gradient(circle at 82% 94%, rgba(110, 0, 16, 0.32), transparent 52%),
+        linear-gradient(165deg, #070707 0%, #180007 52%, #090909 100%);
+    }
+
+    .spicy-scene.show {
+      display: block;
+    }
+
+    .spicy-media {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 20% 12%, rgba(170, 0, 28, 0.22), transparent 42%),
+        radial-gradient(circle at 80% 88%, rgba(120, 0, 18, 0.2), transparent 48%),
+        linear-gradient(145deg, #050505 0%, #130007 54%, #070707 100%);
+    }
+
+    .spicy-layer {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity 0.8s ease, transform 2.6s ease;
+      transform: scale(1.03);
+      will-change: opacity, transform;
+    }
+
+    .spicy-layer.show {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .spicy-layer img,
+    .spicy-layer video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      background: transparent;
+      filter: contrast(1.04) saturate(1.02);
+    }
+
+    .spicy-lyrics {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 20px;
+      text-align: center;
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    .spicy-skip {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      z-index: 8;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      border-radius: 999px;
+      padding: 8px 14px;
+      background: rgba(10, 10, 10, 0.52);
+      color: #fff;
+      font-size: 0.8rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .spicy-outro {
+      position: absolute;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 5;
+      background: rgba(0, 0, 0, 0.42);
+      opacity: 0;
+      transition: opacity 0.9s ease;
+      pointer-events: none;
+    }
+
+    .spicy-outro.show {
+      display: flex;
+      opacity: 1;
+    }
+
+    .spicy-outro-text {
+      font-family: "Dark Side of the Moon", "Franklin Gothic Heavy", "Arial Black", "Impact", sans-serif;
+      font-size: clamp(1.6rem, 6.5vw, 4.2rem);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #f0e8ea;
+      text-shadow: 0 8px 24px rgba(0, 0, 0, 0.65);
+      text-align: center;
+      padding: 0 16px;
+    }
+
+    .portland-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 220;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 22px;
+      background:
+        radial-gradient(circle at 30% 15%, rgba(110, 0, 20, 0.2), transparent 44%),
+        radial-gradient(circle at 70% 80%, rgba(150, 0, 30, 0.14), transparent 46%),
+        #050505;
+      color: #f4ecef;
+      overflow: hidden;
+    }
+
+    .portland-screen.show {
+      display: flex;
+      animation: portland-fade-in 0.8s ease;
+    }
+
+    @keyframes portland-fade-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .portland-hearts {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .portland-heart {
+      position: absolute;
+      bottom: -10vh;
+      color: rgba(170, 15, 42, 0.5);
+      font-size: clamp(12px, 2.5vw, 28px);
+      animation: portland-float linear infinite;
+      user-select: none;
+    }
+
+    @keyframes portland-float {
+      from { transform: translateY(0) translateX(0) scale(0.9); opacity: 0; }
+      10% { opacity: 0.65; }
+      to { transform: translateY(-120vh) translateX(10px) scale(1.06); opacity: 0; }
+    }
+
+    .portland-card {
+      position: relative;
+      z-index: 2;
+      width: min(92vw, 760px);
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(12, 8, 10, 0.8);
+      box-shadow: 0 22px 48px rgba(0, 0, 0, 0.45);
+      padding: 24px 20px;
+      text-align: center;
+    }
+
+    .portland-card p {
+      margin: 0 0 14px;
+      line-height: 1.7;
+      font-size: clamp(1.02rem, 3.4vw, 1.28rem);
+      font-family: "Dark Side of the Moon", "Franklin Gothic Heavy", "Arial Black", "Impact", sans-serif;
+      letter-spacing: 0.05em;
+    }
+
+    .portland-answer {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .portland-answer input {
+      width: min(84vw, 340px);
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.26);
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      padding: 10px 12px;
+      font-size: 0.96rem;
+      text-align: center;
+    }
+
+    .portland-answer button {
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.34);
+      background: rgba(150, 0, 28, 0.75);
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      padding: 9px 18px;
+      cursor: pointer;
+      font-size: 0.86rem;
+    }
+
+    .portland-status {
+      min-height: 18px;
+      font-size: 0.82rem;
+      letter-spacing: 0.04em;
+      color: rgba(244, 236, 239, 0.84);
+      text-transform: uppercase;
+    }
+
+    .grand-finale {
+      position: fixed;
+      inset: 0;
+      z-index: 235;
+      display: none;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 18% 12%, rgba(255, 136, 170, 0.35), transparent 46%),
+        radial-gradient(circle at 80% 88%, rgba(115, 0, 20, 0.35), transparent 52%),
+        linear-gradient(165deg, #22020b 0%, #4f0620 45%, #17040f 100%);
+      color: #fff2f5;
+    }
+
+    .grand-finale.show {
+      display: block;
+      animation: finale-fade-in 0.9s ease;
+    }
+
+    @keyframes finale-fade-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .finale-hearts {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .finale-heart {
+      position: absolute;
+      bottom: -12vh;
+      font-size: clamp(12px, 2.8vw, 30px);
+      animation: finale-float linear infinite;
+      opacity: 0.55;
+      user-select: none;
+      text-shadow: 0 0 12px rgba(0, 0, 0, 0.28);
+    }
+
+    @keyframes finale-float {
+      from { transform: translateY(0) translateX(0) scale(0.85); opacity: 0; }
+      14% { opacity: 0.65; }
+      to { transform: translateY(-125vh) translateX(14px) scale(1.12); opacity: 0; }
+    }
+
+    .finale-wrap {
+      position: relative;
+      z-index: 2;
+      width: min(94vw, 980px);
+      height: 100%;
+      margin: 0 auto;
+      padding: 22px 14px 26px;
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      gap: 12px;
+    }
+
+    .finale-message {
+      min-height: 68px;
+      font-family: "Dark Side of the Moon", "Franklin Gothic Heavy", "Arial Black", "Impact", sans-serif;
+      font-size: clamp(1rem, 4vw, 1.55rem);
+      line-height: 1.55;
+      letter-spacing: 0.05em;
+      text-align: center;
+      text-transform: uppercase;
+      padding: 8px 4px;
+    }
+
+    .finale-message .word {
+      display: inline-block;
+      opacity: 0;
+      transform: translateY(8px) scale(0.94);
+      margin-right: 0.36em;
+      transition: opacity 0.34s ease, transform 0.34s ease;
+    }
+
+    .finale-message .word.show {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    .finale-riddle {
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.55s ease, transform 0.55s ease;
+      text-align: center;
+      font-family: "Dark Side of the Moon", "Franklin Gothic Heavy", "Arial Black", "Impact", sans-serif;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      line-height: 1.65;
+      font-size: clamp(0.95rem, 3.6vw, 1.2rem);
+      background: rgba(14, 5, 9, 0.42);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 12px;
+      padding: 14px 10px;
+    }
+
+    .finale-riddle.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .finale-slideshow {
+      position: relative;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      overflow: hidden;
+      box-shadow: 0 20px 42px rgba(0, 0, 0, 0.35);
+      background: rgba(10, 8, 10, 0.58);
+      min-height: 240px;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.65s ease, transform 0.65s ease;
+    }
+
+    .finale-slideshow.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .finale-media-layer {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity 0.9s ease, transform 3.2s ease;
+      transform: scale(1.03);
+      will-change: opacity, transform;
+    }
+
+    .finale-media-layer.show {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .finale-media-layer img,
+    .finale-media-layer video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      background: #000;
+      filter: contrast(1.03) saturate(1.05);
+    }
+
+    .finale-menu {
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+      background: rgba(14, 5, 9, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .finale-menu.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .finale-menu-title {
+      margin: 0 0 10px;
+      font-size: 0.88rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255, 234, 240, 0.88);
+      font-family: "Dark Side of the Moon", "Franklin Gothic Heavy", "Arial Black", "Impact", sans-serif;
+    }
+
+    .finale-menu-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .finale-menu-buttons button {
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      padding: 8px 14px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #fff;
+      background: rgba(148, 8, 40, 0.72);
+      cursor: pointer;
+      font-family: "Dark Side of the Moon", "Franklin Gothic Heavy", "Arial Black", "Impact", sans-serif;
+    }
+
+    .spicy-phrase {
+      font-family: "Plain Germanica", "Times New Roman", serif;
+      font-size: clamp(2rem, 8vw, 5rem);
+      line-height: 1.04;
+      letter-spacing: 0.02em;
+      color: rgba(20, 20, 20, 0.86);
+      text-shadow: 0 6px 18px rgba(255, 255, 255, 0.35);
+      opacity: 0;
+      transform: translateY(10px) scale(0.96);
+      transition: opacity 0.55s ease, transform 0.55s ease;
+      max-width: 92vw;
+    }
+
+    .spicy-phrase.show {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    .spicy-word {
+      display: inline-block;
+      margin-right: 0.24em;
+      color: #151515;
+      transition: color 0.14s ease, text-shadow 0.14s ease, -webkit-text-stroke-color 0.14s ease;
+      -webkit-text-stroke: 0px transparent;
+      text-stroke: 0px transparent;
+    }
+
+    .spicy-word.hot {
+      color: #111;
+      -webkit-text-stroke: 1.5px #a4001b;
+      text-stroke: 1.5px #a4001b;
+      text-shadow: 0 2px 10px rgba(164, 0, 27, 0.2);
+    }
+
+    .riddle-answer {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .riddle-answer input {
+      width: min(84vw, 320px);
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: rgba(12, 10, 10, 0.7);
+      color: #f1e7ea;
+      font-size: 0.9rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-family: "Dark Side of the Moon", "Franklin Gothic Heavy", "Arial Black", "Impact", sans-serif;
+    }
+
+    .riddle-answer button {
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      border-radius: 999px;
+      padding: 10px 20px;
+      background: rgba(150, 0, 0, 0.9);
+      color: #fff;
+      font-size: 0.95rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      font-family: "Dark Side of the Moon", "Franklin Gothic Heavy", "Arial Black", "Impact", sans-serif;
+    }
+
+    .riddle-answer .status {
+      min-height: 20px;
+      font-size: 0.85rem;
+      letter-spacing: 0.04em;
+      color: rgba(245, 235, 236, 0.8);
+      text-transform: uppercase;
+    }
+
+    .scratch-wrap {
+      position: relative;
+      margin: 0 auto;
+      max-width: 760px;
+    }
+
+    .scratch-cover {
+      position: absolute;
+      inset: -14px -14px -14px -14px;
+      border-radius: 10px;
+      z-index: 3;
+      background:
+        linear-gradient(120deg, rgba(40, 38, 42, 0.95), rgba(18, 16, 18, 0.95)),
+        repeating-linear-gradient(45deg, rgba(255,255,255,0.04) 0 6px, transparent 6px 12px);
+      pointer-events: none;
+      opacity: 0.9;
+      transition: opacity 0.4s ease;
+    }
+
+    .scratch-cover.hidden {
+      opacity: 0;
+    }
+
+    .scratch-canvas {
+      position: absolute;
+      inset: -14px -14px -14px -14px;
+      width: calc(100% + 28px);
+      height: calc(100% + 28px);
+      border-radius: 10px;
+      cursor: crosshair;
+      touch-action: none;
+      z-index: 4;
+    }
+
+    .scratch-label {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.85rem;
+      letter-spacing: 0.08em;
+      color: rgba(255, 255, 255, 0.7);
+      text-transform: uppercase;
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    .scratch-label.hidden {
+      opacity: 0;
+    }
+
+    .scratch-wrap p,
+    .scratch-wrap .question,
+    .scratch-wrap .riddle-answer {
+      position: relative;
+      z-index: 1;
+    }
+
+    .grain {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        repeating-radial-gradient(circle at 25% 35%, rgba(255,255,255,0.03) 0 1px, transparent 1px 3px),
+        repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0 1px, transparent 1px 4px);
+      mix-blend-mode: screen;
+      opacity: 0.2;
+      animation: drift 0.14s steps(2) infinite;
+    }
+
+    @keyframes drift {
+      0%, 100% { transform: translate(0, 0); }
+      33% { transform: translate(1px, -1px); }
+      66% { transform: translate(-1px, 1px); }
+    }
+
+    @keyframes video-dim {
+      from { filter: saturate(0.92) contrast(1.05) brightness(1); }
+      to { filter: saturate(0.6) contrast(1.02) brightness(0.42); }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-wrap">
+    <video class="bg-video" autoplay muted loop playsinline preload="auto">
+      <source src="scream_background.mp4" type="video/mp4" />
+      <source src="assets/scream_background.mp4" type="video/mp4" />
+    </video>
+  </div>
+  <video id="screamLayer" class="scream-layer" playsinline preload="auto"></video>
+  <div class="grain"></div>
+  <div class="lyric-stage" id="lyricStage"></div>
+  <button class="skip-btn" id="skipBtn" type="button">Skip to End</button>
+  <div class="scroll-hint" id="scrollHint">
+    <div class="arrow"></div>
+    <div>Scroll Down</div>
+  </div>
+  <div class="riddle-panel" id="riddlePanel">
+    <div class="scratch-wrap" id="scratchWrap">
+      <div class="scratch-label">Scratch to reveal</div>
+      <canvas class="scratch-canvas" id="scratchCanvas"></canvas>
+      <div class="scratch-cover" id="scratchCover"></div>
+      <p>
+        I am the question asked on the phone,<br>
+        By a masked killer when you're all alone.<br>
+        I want to know which horror flick you love the best.<br>
+        Answer me now, or fail the test.
+      </p>
+      <div class="question">What is the question?</div>
+      <div class="riddle-answer">
+        <input id="riddleInput" type="text" placeholder="Type your answer" autocomplete="off" />
+        <button id="riddleSubmit" type="button">Submit</button>
+        <div class="status" id="riddleStatus"></div>
+      </div>
+    </div>
+  </div>
+  <div class="audio-gate" id="audioGate">
+    <div style="display:flex;flex-direction:column;align-items:center;">
+      <button id="audioStart" type="button">Tap to start</button>
+      <button id="skipToPuzzle" class="skip-test" type="button">Skip to Puzzle</button>
+    </div>
+  </div>
+  <div class="next-screen" id="nextScreen">
+    <div class="next-content">
+      <h2 class="next-title">Good Job Baby!!!</h2>
+      <p>
+        Spot on. But don't get too comfortable... That was just the warm up.
+        Welcome to a scavenger hunt, but with a twist.
+        You survived round one but keep your eyes open.
+      </p>
+      <div class="dial-wrap">
+        <input class="dial" id="dialMonth" type="text" inputmode="numeric" maxlength="2" placeholder="MM" />
+        <span class="dial-sep">/</span>
+        <input class="dial" id="dialDay" type="text" inputmode="numeric" maxlength="2" placeholder="DD" />
+        <span class="dial-sep">/</span>
+        <input class="dial" id="dialYear" type="text" inputmode="numeric" maxlength="4" placeholder="YYYY" />
+      </div>
+      <div class="dial-status" id="dialStatus"></div>
+    </div>
+  </div>
+  <div class="page-flip" id="pageFlip">
+    <div class="intro-screen" id="introTransition">
+      <div class="intro-screen__title">
+        <div>Good Job Baby!!!</div>
+      </div>
+      <div class="intro-screen__shape">
+        <svg class="shape" width="100%" height="100vh" preserveAspectRatio="none" viewBox="0 0 1440 800">
+          <path id="wavePath"
+            d="M -44,-50 C -52.71,28.52 15.86,8.186 184,14.69 383.3,22.39 462.5,12.58 638,14 835.5,15.6 987,6.4 1194,13.86 1661,30.68 1652,-36.74 1582,-140.1 1512,-243.5 15.88,-589.5 -44,-50 Z">
+            <animate id="waveMorph" attributeName="d" dur="2.2s" fill="freeze"
+              to="M -44,-50 C -137.1,117.4 67.86,445.5 236,452 435.3,459.7 500.5,242.6 676,244 873.5,245.6 957,522.4 1154,594 1593,753.7 1793,226.3 1582,-126 1371,-478.3 219.8,-524.2 -44,-50 Z" />
+          </path>
+        </svg>
+      </div>
+    </div>
+  </div>
+  <div class="final-screen" id="finalScreen">
+    <div class="final-scroll" id="finalScroll"></div>
+  </div>
+  <div class="music-note-transition" id="musicNoteTransition"></div>
+  <div class="music-next-screen" id="musicNextScreen">
+    <div class="white-screen">
+      <div class="white-rotator" id="whiteRotator">
+        <div class="rotator-slice" data-slice="0"><div class="slice-inner" id="slice0"></div></div>
+        <div class="rotator-slice" data-slice="1"><div class="slice-inner" id="slice1"></div></div>
+        <div class="rotator-slice" data-slice="2"><div class="slice-inner" id="slice2"></div></div>
+      </div>
+      <div class="white-rotator-status" id="whiteRotateStatus">Tap each strip to rotate and fix the image</div>
+      <button id="whiteStartBtn" class="white-start" type="button">Start</button>
+    </div>
+  </div>
+  <div class="warning-screen" id="warningScreen">
+    <h1 class="warning-title">Warning</h1>
+    <p class="warning-sub" id="warningSub">something hot incoming!!!</p>
+    <button class="warning-start" id="warningStartBtn" type="button">Start</button>
+  </div>
+  <div class="spicy-scene" id="spicyScene">
+    <button id="spicySkipBtn" class="spicy-skip" type="button">Skip to End</button>
+    <div class="spicy-media" id="spicyMedia">
+      <div class="spicy-layer" id="spicyLayerA"></div>
+      <div class="spicy-layer" id="spicyLayerB"></div>
+    </div>
+    <div class="spicy-lyrics" id="spicyLyrics"></div>
+    <div class="spicy-outro" id="spicyOutro">
+      <div class="spicy-outro-text">Okay okay lets move on</div>
+    </div>
+  </div>
+  <div class="portland-screen" id="portlandScreen">
+    <div class="portland-hearts" id="portlandHearts"></div>
+    <div class="portland-card">
+      <p>
+        A city wrapped in rain.<br>
+        Coffee before words.<br><br>
+        It isn't where we are.<br><br>
+        It's where we're going.
+      </p>
+      <div class="portland-answer">
+        <input id="portlandInput" type="text" autocomplete="off" placeholder="Type your answer" />
+        <button id="portlandSubmit" type="button">Submit</button>
+        <div class="portland-status" id="portlandStatus"></div>
+      </div>
+    </div>
+  </div>
+  <div class="grand-finale" id="grandFinale">
+    <div class="finale-hearts" id="finaleHearts"></div>
+    <div class="finale-wrap">
+      <div class="finale-message" id="finaleMessage"></div>
+      <div class="finale-riddle" id="finaleRiddle">
+        To find the treasure waiting for you,<br>
+        Look beneath the resting you do.<br>
+        I slide out from the dark and deep,<br>
+        Directly under where you sleep.
+      </div>
+      <div class="finale-slideshow" id="finaleSlideshow">
+        <div class="finale-media-layer" id="finaleLayerA"></div>
+        <div class="finale-media-layer" id="finaleLayerB"></div>
+      </div>
+      <div class="finale-menu" id="finaleMenu">
+        <p class="finale-menu-title">Replay Menu</p>
+        <div class="finale-menu-buttons">
+          <button type="button" id="menuReplaySong">Replay Song Slideshow</button>
+          <button type="button" id="menuReplayScream">Replay Scream</button>
+          <button type="button" id="menuReplaySboys">Replay Sboys</button>
+          <button type="button" id="menuReplaySpicy">Replay Spicy</button>
+          <button type="button" id="menuRestartAll">Restart All</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="sboys-blackout" id="sboysBlackout"></div>
+  <div class="sboys-scene" id="sboysScene">
+    <button id="sboysSkipBtn" class="sboys-skip" type="button">Skip to End</button>
+    <video id="sboysBg" class="sboys-bg" playsinline muted loop preload="auto">
+      <source src="sboys_background.mp4" type="video/mp4" />
+    </video>
+    <div class="sboys-clips">
+      <video id="sboysClipA" class="sboys-clip" playsinline muted preload="metadata"></video>
+      <video id="sboysClipB" class="sboys-clip" playsinline muted preload="metadata"></video>
+    </div>
+    <div class="sboys-lyrics" id="sboysLyrics"></div>
+    <div class="sboys-doubletap" id="sboysDoubleTap">
+      <div class="sboys-doubletap-text">Double Tap</div>
+    </div>
+    <div class="sboys-riddle" id="sboysRiddle">
+      <div class="sboys-riddle-card">
+        <p>
+          I am the home where the Woadies run,<br>
+          But I am not Paris, nor the rising sun.<br>
+          I am not the Mountain of Sinai, nor Antarctica's cold,<br>
+          But I am the district where the Scarecrow and Leopard grow old.<br>
+          I am the number that defines the Grey,<br>
+          The neighborhood where the boys from the bottom stay.
+        </p>
+        <div class="sboys-riddle-q">What am I?</div>
+        <input id="sboysRiddleInput" class="sboys-riddle-input" type="text" autocomplete="off" placeholder="Your answer" />
+        <div class="sboys-riddle-actions">
+          <button id="sboysRiddleSubmit" type="button">Submit</button>
+          <button id="sboysHintBtn" type="button">Hint</button>
+        </div>
+        <div id="sboysRiddleHint" class="sboys-riddle-hint"></div>
+        <div id="sboysRiddleStatus" class="sboys-riddle-status"></div>
+      </div>
+    </div>
+  </div>
+  <div class="dj-next-screen" id="djNextScreen">
+    <div class="final-scroll" id="djScroll"></div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script>
+    let MEDIA_MAP = {};
+    let mediaObserver = null;
+
+    function normalizeMediaPath(value) {
+      const raw = String(value || "").trim();
+      if (!raw) return "";
+      if (/^(data:|blob:)/i.test(raw)) return raw;
+      try {
+        if (/^https?:/i.test(raw)) {
+          const u = new URL(raw, window.location.href);
+          if (u.origin !== window.location.origin) return raw;
+          return decodeURI(u.pathname.replace(/^\/+/, ""));
+        }
+        return decodeURI(
+          raw
+            .split("#")[0]
+            .split("?")[0]
+            .replace(/\\/g, "/")
+            .replace(/^\.?\//, "")
+        );
+      } catch {
+        return raw.replace(/\\/g, "/").replace(/^\.?\//, "");
+      }
+    }
+
+    function resolveMediaPath(path) {
+      const key = normalizeMediaPath(path);
+      return (key && MEDIA_MAP[key]) || path;
+    }
+
+    function remapNodeMedia(node) {
+      if (!node || node.nodeType !== 1) return;
+      ["src", "poster"].forEach((attr) => {
+        const current = node.getAttribute(attr);
+        if (!current) return;
+        const next = resolveMediaPath(current);
+        if (next !== current) node.setAttribute(attr, next);
+      });
+    }
+
+    function remapMediaTree(root = document) {
+      remapNodeMedia(root);
+      if (!root.querySelectorAll) return;
+      root.querySelectorAll("[src], [poster]").forEach(remapNodeMedia);
+    }
+
+    function startMediaObserver() {
+      if (mediaObserver) return;
+      mediaObserver = new MutationObserver((mutations) => {
+        mutations.forEach((m) => {
+          if (m.type === "attributes" && m.target) remapNodeMedia(m.target);
+          if (m.type === "childList" && m.addedNodes) {
+            m.addedNodes.forEach((n) => remapMediaTree(n));
+          }
+        });
+      });
+      mediaObserver.observe(document.documentElement, {
+        subtree: true,
+        childList: true,
+        attributes: true,
+        attributeFilter: ["src", "poster"],
+      });
+    }
+
+    const MEDIA_MAP_READY = (async () => {
+      try {
+        const res = await fetch("data/supabase-media-map.json", { cache: "no-store" });
+        if (res.ok) {
+          const json = await res.json();
+          if (json && typeof json === "object") MEDIA_MAP = json;
+        }
+      } catch {
+        MEDIA_MAP = {};
+      }
+      remapMediaTree(document);
+      startMediaObserver();
+    })();
+
+    const PARTS = [
+      {
+        media: ["scream.mp4", "scream.mp3", "assets/scream.mp4", "assets/scream.mp3"],
+        lrc: ["scream.lrc", "assets/scream.lrc"]
+      }
+    ];
+
+    const STOP_AT = 12 * 60 + 36;
+    const stage = document.getElementById("lyricStage");
+    const bgWrap = document.querySelector(".bg-wrap");
+    const grain = document.querySelector(".grain");
+    const gate = document.getElementById("audioGate");
+    const gateBtn = document.getElementById("audioStart");
+    const skipToPuzzleBtn = document.getElementById("skipToPuzzle");
+    const screamLayer = document.getElementById("screamLayer");
+    const skipBtn = document.getElementById("skipBtn");
+    const scrollHint = document.getElementById("scrollHint");
+    const riddlePanel = document.getElementById("riddlePanel");
+    const scratchCanvas = document.getElementById("scratchCanvas");
+    const scratchCover = document.getElementById("scratchCover");
+    const scratchWrap = document.getElementById("scratchWrap");
+    const scratchLabel = document.querySelector(".scratch-label");
+    const riddleInput = document.getElementById("riddleInput");
+    const riddleSubmit = document.getElementById("riddleSubmit");
+    const riddleStatus = document.getElementById("riddleStatus");
+    const nextScreen = document.getElementById("nextScreen");
+    const finalScreen = document.getElementById("finalScreen");
+    const finalScroll = document.getElementById("finalScroll");
+    const pageFlip = document.getElementById("pageFlip");
+    const dialMonth = document.getElementById("dialMonth");
+    const dialDay = document.getElementById("dialDay");
+    const dialYear = document.getElementById("dialYear");
+    const dialStatus = document.getElementById("dialStatus");
+    const introTransition = document.getElementById("introTransition");
+    const waveMorph = document.getElementById("waveMorph");
+    const musicNoteTransition = document.getElementById("musicNoteTransition");
+    const musicNextScreen = document.getElementById("musicNextScreen");
+    const whiteRotator = document.getElementById("whiteRotator");
+    const slice0 = document.getElementById("slice0");
+    const slice1 = document.getElementById("slice1");
+    const slice2 = document.getElementById("slice2");
+    const whiteStartBtn = document.getElementById("whiteStartBtn");
+    const whiteRotateStatus = document.getElementById("whiteRotateStatus");
+    const sboysBlackout = document.getElementById("sboysBlackout");
+    const sboysScene = document.getElementById("sboysScene");
+    const sboysBg = document.getElementById("sboysBg");
+    const sboysClipA = document.getElementById("sboysClipA");
+    const sboysClipB = document.getElementById("sboysClipB");
+    const sboysLyrics = document.getElementById("sboysLyrics");
+    const sboysDoubleTap = document.getElementById("sboysDoubleTap");
+    const sboysRiddle = document.getElementById("sboysRiddle");
+    const sboysRiddleInput = document.getElementById("sboysRiddleInput");
+    const sboysRiddleSubmit = document.getElementById("sboysRiddleSubmit");
+    const sboysHintBtn = document.getElementById("sboysHintBtn");
+    const sboysRiddleHint = document.getElementById("sboysRiddleHint");
+    const sboysRiddleStatus = document.getElementById("sboysRiddleStatus");
+    const sboysSkipBtn = document.getElementById("sboysSkipBtn");
+    const djNextScreen = document.getElementById("djNextScreen");
+    const djScroll = document.getElementById("djScroll");
+    const warningScreen = document.getElementById("warningScreen");
+    const warningSub = document.getElementById("warningSub");
+    const warningStartBtn = document.getElementById("warningStartBtn");
+    const spicyScene = document.getElementById("spicyScene");
+    const spicySkipBtn = document.getElementById("spicySkipBtn");
+    const spicyLayerA = document.getElementById("spicyLayerA");
+    const spicyLayerB = document.getElementById("spicyLayerB");
+    const spicyLyrics = document.getElementById("spicyLyrics");
+    const spicyOutro = document.getElementById("spicyOutro");
+    const portlandScreen = document.getElementById("portlandScreen");
+    const portlandHearts = document.getElementById("portlandHearts");
+    const portlandInput = document.getElementById("portlandInput");
+    const portlandSubmit = document.getElementById("portlandSubmit");
+    const portlandStatus = document.getElementById("portlandStatus");
+    const grandFinale = document.getElementById("grandFinale");
+    const finaleHearts = document.getElementById("finaleHearts");
+    const finaleMessage = document.getElementById("finaleMessage");
+    const finaleRiddle = document.getElementById("finaleRiddle");
+    const finaleMenu = document.getElementById("finaleMenu");
+    const finaleLayerA = document.getElementById("finaleLayerA");
+    const finaleLayerB = document.getElementById("finaleLayerB");
+    const menuReplayScream = document.getElementById("menuReplayScream");
+    const menuReplaySong = document.getElementById("menuReplaySong");
+    const menuReplaySboys = document.getElementById("menuReplaySboys");
+    const menuReplaySpicy = document.getElementById("menuReplaySpicy");
+    const menuRestartAll = document.getElementById("menuRestartAll");
+    const activeWords = [];
+    const player = screamLayer;
+    player.preload = "auto";
+    let rafId = null;
+    let whiteFlowStarted = false;
+    let whiteCurrentRotations = [0, 0, 0];
+    let whiteRotateHandlersBound = false;
+    let sboysStarted = false;
+    const sboysAudio = new Audio(resolveMediaPath("sboys.mp3"));
+    sboysAudio.preload = "auto";
+    let sboysLyricsRunning = false;
+    let sboysPostReady = false;
+    let sboysLastTap = 0;
+    let djTransitionStarted = false;
+    let djScreenReady = false;
+    let warningFlowStarted = false;
+    const alertAudio = new Audio();
+    alertAudio.preload = "auto";
+    const spicyAudio = new Audio(resolveMediaPath("spicy.mp4"));
+    spicyAudio.preload = "auto";
+    let spicyStarted = false;
+    let spicyPhraseIndex = -1;
+    let spicyTicker = 0;
+    let spicyActivePhrase = null;
+    let spicyActiveWordSpans = [];
+    let spicyActivePhraseEnd = 0;
+    let spicyMediaIndex = -1;
+    let spicyMediaSlot = 4;
+    let spicyMediaPlan = [];
+    let spicyFrontLayer = 0;
+    let portlandBound = false;
+    let finaleStarted = false;
+    let finaleMediaTimer = 0;
+    let finaleSongTimer = 0;
+    let finaleMediaIndex = -1;
+    let finaleFrontLayer = 0;
+    const finaleSong = new Audio(resolveMediaPath("song.mp3"));
+    finaleSong.preload = "auto";
+    const MINE_MEDIA_FILES = [
+      "mine/first.jpg",
+      "mine/137565468_1749941698512396_2166506294632484223_n.jpg",
+      "mine/395309181_324519750267381_6573921517189379440_n.jpg",
+      "mine/442659423_757802849858836_6884266647006345223_n.jpg",
+      "mine/444760926_1479902225945317_7388590292162533247_n.jpg",
+      "mine/448525398_296239803481047_5666775532533651598_n.jpg",
+      "mine/454366519_1250125929769293_2994220701613805268_n.jpg",
+      "mine/461190317_1079704463886958_821864494376720484_n.jpg",
+      "mine/461520322_8289759377788421_3069001227073909538_n.jpg",
+      "mine/461695895_3698261633771380_2533165986241516418_n.jpg",
+      "mine/461700420_1047421460216410_6837473241507004991_n.jpg",
+      "mine/462295397_1050753963315947_9105854442794721989_n.jpg",
+      "mine/462542982_3886251684949542_6635525247116284888_n.jpg",
+      "mine/462572137_9285239951487716_5912084517945979043_n.jpg",
+      "mine/488232807_956622926284859_363931808322619320_n.jpg",
+      "mine/490717400_2945172988989255_6979898144778089942_n.jpg",
+      "mine/491339542_2947380988768455_5562583140524467524_n.jpg",
+      "mine/503716830_3003874653119088_6162204099021333203_n.jpg",
+      "mine/Messenger_creation_296239800147714.jpeg",
+    ];
+    const MINE_VIDEO = "mine/470950601_8722784104513729_1698902888686174331_n.mp4";
+
+    function parseLrc(text) {
+      const lines = text.split(/\r?\n/);
+      const out = [];
+      const lineTime = /\[(\d{2}):(\d{2})(?:\.(\d{2}))?\]/g;
+      const wordTime = /<(\d{2}):(\d{2})\.(\d{2})>/g;
+      lines.forEach((raw) => {
+        if (!raw.trim()) return;
+        if (/^\[(ti|ar|al|by|length):/i.test(raw)) return;
+        const tags = [...raw.matchAll(lineTime)];
+        if (!tags.length) return;
+        const noLineTags = raw.replace(lineTime, "");
+        const words = [];
+        let lastIdx = 0;
+        let lastT = null;
+        noLineTags.replace(wordTime, (m, mm, ss, ff, offset) => {
+          if (lastT !== null) {
+            const token = noLineTags.slice(lastIdx, offset).trim();
+            if (token) words.push({ t: lastT, text: token });
+          }
+          lastIdx = offset + m.length;
+          lastT = Number(mm) * 60 + Number(ss) + Number(ff) / 100;
+          return m;
+        });
+        if (lastT !== null) {
+          const tail = noLineTags.slice(lastIdx).trim();
+          if (tail) words.push({ t: lastT, text: tail });
+        }
+        const clean = noLineTags.replace(wordTime, "").trim();
+        tags.forEach((tag) => {
+          const t = Number(tag[1]) * 60 + Number(tag[2]) + Number(tag[3] || 0) / 100;
+          out.push({ t, text: clean, words });
+        });
+      });
+      return out.sort((a, b) => a.t - b.t);
+    }
+
+    function buildWordEvents(entries) {
+      const out = [];
+      entries.forEach((entry) => {
+        if (entry.words && entry.words.length) {
+          entry.words.forEach((w) => {
+            const text = String(w.text || "").trim();
+            if (text) out.push({ t: Number(w.t || 0), text });
+          });
+          return;
+        }
+        const split = String(entry.text || "").trim().split(/\s+/).filter(Boolean);
+        split.forEach((word, idx) => {
+          out.push({ t: Number(entry.t || 0) + idx * 0.22, text: word });
+        });
+      });
+      return out.sort((a, b) => a.t - b.t);
+    }
+
+    function buildPhraseEvents(wordEvents, minWords = 2, maxWords = 4) {
+      const phrases = [];
+      let i = 0;
+      while (i < wordEvents.length) {
+        const chunk = [];
+        let cursor = i;
+        const first = wordEvents[cursor];
+        if (!first) break;
+        chunk.push(first);
+        cursor += 1;
+
+        while (cursor < wordEvents.length && chunk.length < maxWords) {
+          const prev = chunk[chunk.length - 1];
+          const next = wordEvents[cursor];
+          const gap = next.t - prev.t;
+          const totalSpan = next.t - chunk[0].t;
+          // Keep phrases tight so no far-future words show early.
+          if (gap > 0.45 || totalSpan > 1.1) break;
+          chunk.push(next);
+          cursor += 1;
+        }
+
+        while (cursor < wordEvents.length && chunk.length < minWords) {
+          const prev = chunk[chunk.length - 1];
+          const next = wordEvents[cursor];
+          const gap = next.t - prev.t;
+          if (gap > 0.55) break;
+          chunk.push(next);
+          cursor += 1;
+        }
+
+        const start = chunk[0].t;
+        const lastWordT = chunk[chunk.length - 1].t;
+        const nextStart = cursor < wordEvents.length ? wordEvents[cursor].t : lastWordT + 0.45;
+        const end = Math.max(start + 0.16, Math.min(lastWordT + 0.28, nextStart - 0.04));
+        phrases.push({
+          t: start,
+          end,
+          words: chunk
+        });
+        i = cursor;
+      }
+      return phrases;
+    }
+
+    function centerPos() {
+      return {
+        x: 50 + (Math.random() * 8 - 4),
+        y: 55 + (Math.random() * 8 - 4)
+      };
+    }
+
+    function fadeAndRemove(node, ms = 320) {
+      if (!node || node.dataset.fading === "1") return;
+      node.dataset.fading = "1";
+      node.classList.add("fade");
+      window.setTimeout(() => node.remove(), ms);
+    }
+
+    function clearVisualLoop() {
+      screamLayer.classList.remove("show");
+    }
+
+    function syncScreamVisibility(isSpeaking) {
+      screamLayer.classList.toggle("show", Boolean(isSpeaking));
+    }
+
+    function pushPhrase(phrase) {
+      const node = document.createElement("div");
+      node.className = "lyric-word-pop";
+      node.dataset.end = String(phrase.end || phrase.t || 0);
+      const words = Array.isArray(phrase.words) ? phrase.words : [];
+      words.forEach((w, idx) => {
+        const span = document.createElement("span");
+        span.className = "phrase-word";
+        span.dataset.t = String(w.t);
+        span.textContent = w.text;
+        node.appendChild(span);
+      });
+      const pos = centerPos();
+      node.style.left = `${pos.x}vw`;
+      node.style.top = `${pos.y}vh`;
+      stage.appendChild(node);
+      requestAnimationFrame(() => node.classList.add("show"));
+      activeWords.push(node);
+      while (activeWords.length > 3) {
+        const old = activeWords.shift();
+        fadeAndRemove(old);
+      }
+      activeWords.forEach((w) => {
+        if (w !== node) {
+          w.classList.remove("hot");
+          w.classList.add("fade");
+        }
+      });
+      node.classList.add("hot");
+    }
+
+    function tickLyrics(audio, phraseEvents) {
+      let phraseIndex = -1;
+      function frame() {
+        const t = audio.currentTime;
+        if (t >= STOP_AT) {
+          syncScreamVisibility(false);
+          activeWords.forEach((node) => fadeAndRemove(node, 220));
+          activeWords.length = 0;
+          showScrollPrompt();
+          return;
+        }
+
+        // Force the scream layer on for the final 5 seconds before cutoff.
+        if (t >= STOP_AT - 5) {
+          syncScreamVisibility(true);
+        }
+        while (phraseIndex + 1 < phraseEvents.length && t >= phraseEvents[phraseIndex + 1].t - 0.01) {
+          phraseIndex += 1;
+          pushPhrase(phraseEvents[phraseIndex]);
+        }
+
+        for (let i = activeWords.length - 1; i >= 0; i -= 1) {
+          const node = activeWords[i];
+          if (!node.isConnected) {
+            activeWords.splice(i, 1);
+            continue;
+          }
+          const end = Number(node.dataset.end || 1e9);
+          if (t >= end) {
+            fadeAndRemove(node);
+            activeWords.splice(i, 1);
+          }
+        }
+
+        if (phraseIndex >= 0 && activeWords.length) {
+          const active = activeWords[activeWords.length - 1];
+          const phraseEnd = Number(active.dataset.end || 1e9);
+          const nextT = phraseIndex + 1 < phraseEvents.length ? phraseEvents[phraseIndex + 1].t : 1e9;
+          active.classList.toggle("hot", t < nextT);
+          const spans = active.querySelectorAll(".phrase-word");
+          spans.forEach((s, idx) => {
+            const st = Number(s.dataset.t || 0);
+            const nt = idx < spans.length - 1
+              ? Number(spans[idx + 1].dataset.t || nextT)
+              : Math.min(nextT, phraseEnd);
+            s.classList.toggle("hot", t >= st && t < nt);
+          });
+          if (t < STOP_AT - 5) syncScreamVisibility(true);
+        } else {
+          if (t < STOP_AT - 5) syncScreamVisibility(false);
+        }
+        rafId = requestAnimationFrame(frame);
+      }
+      frame();
+      return () => cancelAnimationFrame(rafId);
+    }
+
+    async function fetchText(url) {
+      try {
+        const res = await fetch(resolveMediaPath(url));
+        if (!res.ok) return "";
+        return await res.text();
+      } catch {
+        return "";
+      }
+    }
+
+    async function resolveLrc(paths) {
+      for (const p of paths) {
+        const txt = await fetchText(p);
+        if (txt) return txt;
+      }
+      return "";
+    }
+
+    async function loadWhiteScreenImages() {
+      const starImages = [
+        "star/480699470_2894857227354165_4819901431093675060_n.jpg",
+        "star/489280747_2939122942927593_4874166078410245614_n.jpg",
+        "star/489463679_2939412809565273_1207858651321423000_n.jpg",
+        "star/490549970_2947380865435134_4126739602186258324_n.jpg",
+        "star/502833193_2995600767279810_2418469616106989481_n.jpg",
+        "star/503632704_3003874733119080_8243110455520481139_n.jpg",
+        "star/504475898_3003874779785742_1877176787869076140_n.jpg",
+        "star/505318427_3003875089785711_4850345209815884473_n.jpg",
+        "star/516376981_3034765493363337_5538960618020503218_n.jpg",
+      ];
+      let pics = [];
+      try {
+        const res = await fetch("data/photos.json");
+        if (res.ok) {
+          const json = await res.json();
+          if (Array.isArray(json)) {
+            pics = json.filter((p) => /\.(jpg|jpeg|png|webp)$/i.test(String(p || "")));
+          }
+        }
+      } catch {
+        // no-op
+      }
+      return Array.from(new Set([...pics, ...starImages]));
+    }
+
+    async function runWhiteScreenFlow(delayMs = 5000) {
+      if (whiteFlowStarted) return;
+      whiteFlowStarted = true;
+      if (!whiteRotator || !slice0 || !slice1 || !slice2 || !whiteStartBtn) return;
+
+      whiteStartBtn.classList.remove("show");
+      whiteRotator.classList.remove("fixed");
+      window.setTimeout(async () => {
+        const images = await loadWhiteScreenImages();
+        if (!images.length) {
+          whiteStartBtn.classList.add("show");
+          return;
+        }
+
+        whiteRotator.classList.add("show");
+        const targetImage = images[Math.floor(Math.random() * images.length)];
+        [slice0, slice1, slice2].forEach((slice) => {
+          slice.style.backgroundImage = `url('${resolveMediaPath(targetImage)}')`;
+        });
+        const choices = [90, -90, 180, -180, 270, -270];
+        whiteCurrentRotations = [
+          choices[Math.floor(Math.random() * choices.length)],
+          choices[Math.floor(Math.random() * choices.length)],
+          choices[Math.floor(Math.random() * choices.length)],
+        ];
+        [slice0, slice1, slice2].forEach((slice, idx) => {
+          slice.style.setProperty("--rot", `${whiteCurrentRotations[idx]}deg`);
+        });
+        whiteRotateStatus.textContent = "Tap each strip to rotate and fix the image";
+        bindWhiteRotateHandlers();
+      }, delayMs);
+    }
+
+    function jumpToRotatingPuzzle() {
+      gate.style.display = "none";
+      try { player.pause(); } catch {}
+      if (bgWrap) bgWrap.style.display = "none";
+      if (grain) grain.style.display = "none";
+      if (screamLayer) screamLayer.style.display = "none";
+      if (stage) stage.style.display = "none";
+      document.body.style.background = "#ffffff";
+      musicNextScreen.classList.add("show");
+      whiteFlowStarted = false;
+      runWhiteScreenFlow(0);
+    }
+
+    async function playSingleSource(src, entries) {
+      let stopTick = () => {};
+      stage.innerHTML = "";
+      activeWords.length = 0;
+      clearVisualLoop();
+      player.pause();
+      player.currentTime = 0;
+      player.src = resolveMediaPath(src);
+      player.muted = false;
+      player.volume = 1;
+      await player.play();
+      const phraseEvents = buildPhraseEvents(buildWordEvents(entries), 2, 4);
+      stopTick = tickLyrics(player, phraseEvents);
+      await new Promise((resolve) => {
+        let done = false;
+        const finish = () => {
+          if (done) return;
+          done = true;
+          player.removeEventListener("timeupdate", onTime);
+          resolve();
+        };
+        const onTime = () => {
+          if (player.currentTime >= STOP_AT) finish();
+        };
+        player.addEventListener("timeupdate", onTime);
+        player.addEventListener("ended", finish, { once: true });
+        player.addEventListener("error", finish, { once: true });
+      });
+      if (player.currentTime >= STOP_AT) {
+        player.pause();
+      }
+      stopTick();
+      clearVisualLoop();
+      activeWords.forEach((node) => fadeAndRemove(node, 220));
+      activeWords.length = 0;
+      showScrollPrompt();
+    }
+
+    function showScrollPrompt() {
+      if (scrollHint.dataset.ready === "1") return;
+      scrollHint.dataset.ready = "1";
+      scrollHint.classList.add("show");
+      let scrollSum = 0;
+      const needed = 420;
+      const reveal = () => {
+        riddlePanel.classList.add("show");
+        if (scrollHint) {
+          scrollHint.classList.remove("show");
+          scrollHint.style.display = "none";
+          scrollHint.remove();
+        }
+        window.removeEventListener("wheel", reveal);
+        window.removeEventListener("touchmove", reveal);
+        window.removeEventListener("keydown", onKey);
+        window.removeEventListener("wheel", onWheel);
+        window.removeEventListener("touchmove", onTouch);
+        initScratch();
+        initRiddleAnswer();
+      };
+      const onWheel = (e) => {
+        scrollSum += Math.abs(e.deltaY || 0);
+        if (scrollSum >= needed) reveal();
+      };
+      let touchStartY = 0;
+      const onTouchStart = (e) => {
+        touchStartY = e.touches && e.touches[0] ? e.touches[0].clientY : 0;
+      };
+      const onTouch = (e) => {
+        const y = e.touches && e.touches[0] ? e.touches[0].clientY : touchStartY;
+        scrollSum += Math.abs(touchStartY - y);
+        touchStartY = y;
+        if (scrollSum >= needed) reveal();
+      };
+      const onKey = (e) => {
+        if (e.key === "ArrowDown" || e.key === "PageDown" || e.key === " ") reveal();
+      };
+      window.addEventListener("wheel", onWheel);
+      window.addEventListener("touchstart", onTouchStart);
+      window.addEventListener("touchmove", onTouch);
+      window.addEventListener("keydown", onKey);
+    }
+
+    function initScratch() {
+      if (!scratchCanvas || scratchCanvas.dataset.ready === "1") return;
+      scratchCanvas.dataset.ready = "1";
+      const ctx = scratchCanvas.getContext("2d");
+      const resize = () => {
+        const rect = scratchWrap.getBoundingClientRect();
+        scratchCanvas.width = Math.floor(rect.width + 16);
+        scratchCanvas.height = Math.floor(rect.height + 16);
+        ctx.fillStyle = "rgba(30, 28, 32, 0.98)";
+        ctx.fillRect(0, 0, scratchCanvas.width, scratchCanvas.height);
+      };
+      resize();
+      window.addEventListener("resize", resize);
+
+      ctx.globalCompositeOperation = "destination-out";
+      let scratching = false;
+      const scratchAt = (x, y) => {
+        ctx.beginPath();
+        ctx.arc(x, y, 28, 0, Math.PI * 2);
+        ctx.fill();
+      };
+      const getPos = (e) => {
+        const rect = scratchCanvas.getBoundingClientRect();
+        const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+        const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+        return { x, y };
+      };
+      const onDown = (e) => {
+        scratching = true;
+        const { x, y } = getPos(e);
+        scratchAt(x, y);
+        e.preventDefault();
+      };
+      const onMove = (e) => {
+        if (!scratching) return;
+        const { x, y } = getPos(e);
+        scratchAt(x, y);
+        e.preventDefault();
+      };
+      const onUp = () => {
+        scratching = false;
+        checkReveal();
+      };
+      const checkReveal = () => {
+        const img = ctx.getImageData(0, 0, scratchCanvas.width, scratchCanvas.height);
+        let cleared = 0;
+        for (let i = 3; i < img.data.length; i += 4) {
+          if (img.data[i] === 0) cleared += 1;
+        }
+        const ratio = cleared / (img.data.length / 4);
+        if (ratio > 0.38) {
+          scratchCover.classList.add("hidden");
+          scratchCanvas.style.pointerEvents = "none";
+          scratchCanvas.style.opacity = "0";
+          if (scratchLabel) scratchLabel.classList.add("hidden");
+          if (scrollHint) {
+            scrollHint.classList.remove("show");
+            scrollHint.style.display = "none";
+            scrollHint.remove();
+          }
+        }
+      };
+
+      scratchCanvas.addEventListener("mousedown", onDown);
+      scratchCanvas.addEventListener("mousemove", onMove);
+      window.addEventListener("mouseup", onUp);
+      scratchCanvas.addEventListener("touchstart", onDown, { passive: false });
+      scratchCanvas.addEventListener("touchmove", onMove, { passive: false });
+      window.addEventListener("touchend", onUp);
+    }
+
+    function normalizeAnswer(text) {
+      return String(text || "")
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .replace(/\bfav\b/g, "favorite")
+        .replace(/\bfavourite\b/g, "favorite");
+    }
+
+    function initRiddleAnswer() {
+      if (!riddleSubmit || riddleSubmit.dataset.ready === "1") return;
+      riddleSubmit.dataset.ready = "1";
+      const expected = normalizeAnswer("What's your favorite scary movie");
+
+      const check = () => {
+        const value = normalizeAnswer(riddleInput.value);
+        if (!value) {
+          riddleStatus.textContent = "Type your answer.";
+          return;
+        }
+        const ok =
+          value === expected ||
+          value.includes("favorite scary movie") ||
+          (value.includes("scary movie") && value.includes("favorite"));
+        if (ok) {
+          riddleStatus.textContent = "Correct.";
+          riddlePanel.classList.remove("show");
+          nextScreen.classList.add("show");
+        } else {
+          riddleStatus.textContent = "Try again.";
+        }
+      };
+
+      riddleSubmit.addEventListener("click", check);
+      riddleInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") check();
+      });
+    }
+
+    function normalizeDigits(text) {
+      return String(text || "").replace(/\D/g, "");
+    }
+
+    function checkDial() {
+      const mm = normalizeDigits(dialMonth.value).padStart(2, "0");
+      const dd = normalizeDigits(dialDay.value).padStart(2, "0");
+      const yy = normalizeDigits(dialYear.value);
+      if (!mm || !dd || yy.length < 4) {
+        dialStatus.textContent = "";
+        return;
+      }
+      if (mm === "01" && dd === "24" && yy === "2017") {
+        dialStatus.textContent = "Correct.";
+        triggerFlip();
+      } else {
+        dialStatus.textContent = "Try again.";
+      }
+    }
+
+    function triggerFlip() {
+      if (pageFlip.classList.contains("show")) return;
+      pageFlip.classList.add("show");
+      if (introTransition) introTransition.classList.add("run");
+      if (waveMorph && waveMorph.beginElement) waveMorph.beginElement();
+      window.setTimeout(() => {
+        nextScreen.classList.remove("show");
+        finalScreen.classList.add("show");
+        initFinalScreen();
+      }, 1500);
+    }
+
+    function runMusicNoteTransition() {
+      if (!musicNoteTransition) return;
+      musicNoteTransition.innerHTML = "";
+      musicNoteTransition.classList.add("show");
+      const notes = ["&#9833;", "&#9835;", "&#9834;", "&#9836;"];
+      const total = 22;
+      for (let i = 0; i < total; i += 1) {
+        const n = document.createElement("span");
+        n.className = "music-note";
+        n.innerHTML = notes[i % notes.length];
+        n.style.top = `${8 + Math.random() * 84}%`;
+        n.style.animationDelay = `${(i * 0.08).toFixed(2)}s`;
+        n.style.animationDuration = `${(1.35 + Math.random() * 0.8).toFixed(2)}s`;
+        musicNoteTransition.appendChild(n);
+      }
+    }
+
+    function setupFinalScrollFlow(root) {
+      const gsap = window.gsap || null;
+      const targets = root.querySelectorAll(".top-note, .poem-note, .notes-note, .photo-block, .riddle-card");
+
+      targets.forEach((node) => {
+        if (
+          node.classList.contains("top-note") ||
+          node.classList.contains("poem-note") ||
+          node.classList.contains("notes-note")
+        ) {
+          node.style.opacity = "0";
+          if (node.classList.contains("poem-note")) {
+            node.style.transform = "translateX(140px) rotate(1.6deg)";
+          } else if (node.classList.contains("notes-note")) {
+            const side = node.dataset.side === "right" ? 1 : -1;
+            node.style.transform = `translateX(${140 * side}px) rotate(${1.6 * side}deg)`;
+          } else {
+            node.style.transform = "translateX(-140px) rotate(-1.6deg)";
+          }
+          return;
+        }
+        if (node.classList.contains("photo-block")) {
+          node.style.opacity = "0";
+          node.style.transform = "translateY(-120px) scale(0.98)";
+          return;
+        }
+        node.style.opacity = "0";
+        node.style.transform = "translateX(140px) rotate(1.6deg)";
+      });
+
+      const playCard = (node) => {
+        if (node.dataset.animated === "1") return;
+        node.dataset.animated = "1";
+
+        if (
+          node.classList.contains("top-note") ||
+          node.classList.contains("poem-note") ||
+          node.classList.contains("notes-note")
+        ) {
+          const words = node.querySelectorAll(".note-word");
+          const fromRight = node.classList.contains("poem-note") || node.dataset.side === "right";
+          if (gsap) {
+            const tl = gsap.timeline();
+            tl.fromTo(
+              node,
+              { opacity: 0, x: fromRight ? 180 : -180, rotate: fromRight ? 2.4 : -2.4 },
+              { opacity: 1, x: 0, rotate: 0, duration: 1.05, ease: "power2.out" }
+            );
+            tl.to(node, { "--note-reveal": "100%", duration: 0.56, ease: "power1.out" }, "-=0.18");
+            tl.to(words, { opacity: 1, y: 0, duration: 0.32, stagger: 0.045, ease: "power2.out" }, "-=0.08");
+          } else {
+            node.classList.add("inview");
+            node.style.setProperty("--note-reveal", "100%");
+            words.forEach((w) => {
+              w.style.opacity = "1";
+              w.style.transform = "translateY(0)";
+            });
+          }
+          return;
+        }
+
+        if (node.classList.contains("photo-block")) {
+          if (gsap) {
+            gsap.fromTo(
+              node,
+              { opacity: 0, y: -130, scale: 0.98 },
+              { opacity: 1, y: 0, scale: 1, duration: 1.0, ease: "power2.out" }
+            );
+          } else {
+            node.classList.add("inview");
+            node.style.opacity = "1";
+            node.style.transform = "translateY(0) scale(1)";
+          }
+          const v = node.querySelector("video");
+          if (v) v.play().catch(() => {});
+          return;
+        }
+
+        if (gsap) {
+          gsap.fromTo(
+            node,
+            { opacity: 0, x: 160, rotate: 2 },
+            { opacity: 1, x: 0, rotate: 0, duration: 0.9, ease: "power2.out" }
+          );
+        } else {
+          node.classList.add("inview");
+          node.style.opacity = "1";
+          node.style.transform = "translateX(0) rotate(0deg)";
+        }
+      };
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) playCard(entry.target);
+          });
+        },
+        {
+          threshold: 0.35,
+          root: root,
+          rootMargin: "0px 0px -12% 0px",
+        }
+      );
+
+      targets.forEach((t) => observer.observe(t));
+      return () => observer.disconnect();
+    }
+
+    function initFinalScreen() {
+      if (!finalScroll || finalScroll.dataset.ready === "1") return;
+      finalScroll.dataset.ready = "1";
+
+      const starImages = [
+        "star/480699470_2894857227354165_4819901431093675060_n.jpg",
+        "star/489280747_2939122942927593_4874166078410245614_n.jpg",
+        "star/489463679_2939412809565273_1207858651321423000_n.jpg",
+        "star/490549970_2947380865435134_4126739602186258324_n.jpg",
+        "star/502833193_2995600767279810_2418469616106989481_n.jpg",
+        "star/503632704_3003874733119080_8243110455520481139_n.jpg",
+        "star/504475898_3003874779785742_1877176787869076140_n.jpg",
+        "star/505318427_3003875089785711_4850345209815884473_n.jpg",
+        "star/516376981_3034765493363337_5538960618020503218_n.jpg"
+      ];
+      const starVideo = "star/20250226_185424.mp4";
+      const pickImage = (exclude = []) => {
+        const pool = starImages.filter((img) => !exclude.includes(img));
+        return pool[Math.floor(Math.random() * pool.length)];
+      };
+
+      const img1 = pickImage();
+      const img2 = "star/this.jpeg";
+
+      const makeNote = (text, cls = "top-note", side = "") => {
+        const el = document.createElement("article");
+        el.className = cls;
+        if (side) el.dataset.side = side;
+        el.innerHTML = `
+          <div class="note-holes"><span></span><span></span><span></span></div>
+          <div class="note-margin"></div>
+        `;
+        const p = document.createElement("p");
+        p.className = "note-text";
+        p.textContent = text;
+        el.appendChild(p);
+        return el;
+      };
+
+      const makePhoto = (src, isVideo = false) => {
+        const el = document.createElement("div");
+        el.className = "photo-block";
+        if (isVideo) {
+          const v = document.createElement("video");
+          v.src = resolveMediaPath(src);
+          v.muted = true;
+          v.loop = true;
+          v.playsInline = true;
+          v.preload = "metadata";
+          v.dataset.autoplay = "1";
+          el.appendChild(v);
+        } else {
+          const img = document.createElement("img");
+          img.src = resolveMediaPath(src);
+          img.alt = "Memory";
+          el.appendChild(img);
+        }
+        return el;
+      };
+
+      const riddleCard = document.createElement("div");
+      riddleCard.className = "riddle-card";
+      riddleCard.innerHTML = `
+        <p>
+          I am the only thing that can fill a room but takes up no space.
+          I can make you cry, dance, or fall in love without ever touching you.
+          What am I?
+        </p>
+        <div class="answer">
+          <input id="musicRiddleInput" type="text" placeholder="Your answer" autocomplete="off" />
+          <button id="musicRiddleSubmit" type="button">Submit</button>
+          <div class="status" id="musicRiddleStatus"></div>
+        </div>
+      `;
+
+      finalScroll.appendChild(
+        makeNote(`You carry the moonlight in your skin,
+
+A pale fire that burns without a sound.
+
+It is a dangerous thing, to love a ghost
+
+But if you are the dark,
+
+I no longer wish to find the light.`, "top-note")
+      );
+      finalScroll.appendChild(makePhoto(img1, false));
+      finalScroll.appendChild(
+        makeNote(
+          "My words haven't been keeping up with my heart lately. Just because I'm quiet doesn't mean I'm not in awe of you every single day."
+          , "poem-note"
+        )
+      );
+      finalScroll.appendChild(makePhoto(starVideo, true));
+      finalScroll.appendChild(
+        makeNote("Less promises, more truth: You are the most beautiful person I have ever known.", "notes-note", "right")
+      );
+      finalScroll.appendChild(
+        makeNote(
+          "I need to work on being better with my words. and actions For now, just know that you're my favorite view.",
+          "notes-note",
+          "left"
+        )
+      );
+      finalScroll.appendChild(
+        makeNote("You also fine as fuck!!", "notes-note", "right")
+      );
+      finalScroll.appendChild(makePhoto(img2, false));
+      finalScroll.appendChild(riddleCard);
+
+      const splitWords = (p) => {
+        const text = p.textContent || "";
+        p.innerHTML = "";
+        const lines = text.split("\n");
+        lines.forEach((line, lineIdx) => {
+          line.split(" ").filter(Boolean).forEach((word) => {
+            const span = document.createElement("span");
+            span.className = "note-word";
+            span.textContent = word + " ";
+            p.appendChild(span);
+          });
+          if (lineIdx < lines.length - 1) {
+            p.appendChild(document.createElement("br"));
+          }
+        });
+      };
+
+      finalScroll.querySelectorAll(".top-note .note-text, .poem-note .note-text, .notes-note .note-text").forEach(splitWords);
+
+      setupFinalScrollFlow(finalScroll);
+
+      const norm = (t) => String(t || "").toLowerCase().replace(/[^a-z]/g, "").trim();
+      const expected = "music";
+      const musicInput = riddleCard.querySelector("#musicRiddleInput");
+      const musicSubmit = riddleCard.querySelector("#musicRiddleSubmit");
+      const musicStatus = riddleCard.querySelector("#musicRiddleStatus");
+      const checkMusic = () => {
+        const val = norm(musicInput.value);
+        if (!val) {
+          musicStatus.textContent = "Type your answer.";
+          return;
+        }
+        if (val === expected) {
+          musicStatus.textContent = "Correct.";
+          finalScreen.classList.add("music-shake");
+          window.setTimeout(() => {
+            finalScreen.classList.remove("music-shake");
+            runMusicNoteTransition();
+            window.setTimeout(() => {
+              if (musicNoteTransition) musicNoteTransition.classList.remove("show");
+              finalScreen.classList.remove("show");
+              if (bgWrap) bgWrap.style.display = "none";
+              if (grain) grain.style.display = "none";
+              if (screamLayer) screamLayer.style.display = "none";
+              if (stage) stage.style.display = "none";
+              document.body.style.background = "#ffffff";
+              musicNextScreen.classList.add("show");
+              runWhiteScreenFlow();
+            }, 1500);
+          }, 1200);
+        } else {
+          musicStatus.textContent = "Try again.";
+        }
+      };
+      musicSubmit.addEventListener("click", checkMusic);
+      musicInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") checkMusic();
+      });
+    }
+
+    [dialMonth, dialDay, dialYear].forEach((el) => {
+      if (!el) return;
+      el.addEventListener("input", checkDial);
+      el.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") checkDial();
+      });
+    });
+
+    async function playSequence() {
+      for (const part of PARTS) {
+        const lrcText = await resolveLrc(part.lrc);
+        const entries = parseLrc(lrcText);
+        let playedThisPart = false;
+        for (const src of part.media) {
+          try {
+            await playSingleSource(src, entries);
+            playedThisPart = true;
+            break;
+          } catch {
+            // try next candidate source for this part
+          }
+        }
+        if (!playedThisPart) {
+          // move forward if this part source set failed
+          continue;
+        }
+      }
+    }
+
+    gateBtn.addEventListener("click", () => {
+      gate.style.display = "none";
+      skipBtn.classList.add("show");
+      playSequence().catch(() => {
+        gate.style.display = "flex";
+      });
+    });
+
+    if (skipToPuzzleBtn) {
+      skipToPuzzleBtn.addEventListener("click", () => {
+        jumpToRotatingPuzzle();
+      });
+    }
+
+    function bindWhiteRotateHandlers() {
+      if (whiteRotateHandlersBound) return;
+      whiteRotateHandlersBound = true;
+      const slices = [slice0, slice1, slice2];
+      const rotateSlice = (idx) => {
+        whiteCurrentRotations[idx] = ((whiteCurrentRotations[idx] + 90) % 360 + 360) % 360;
+        slices[idx].style.setProperty("--rot", `${whiteCurrentRotations[idx]}deg`);
+        const solved = whiteCurrentRotations.every((r) => ((r % 360) + 360) % 360 === 0);
+        if (solved) {
+          whiteRotator.classList.add("fixed");
+          whiteRotateStatus.textContent = "Correct";
+          whiteStartBtn.classList.add("show");
+        } else {
+          whiteRotateStatus.textContent = "Tap each strip to rotate and fix the image";
+        }
+      };
+      slices.forEach((slice, idx) => {
+        if (!slice) return;
+        slice.parentElement.addEventListener("click", () => rotateSlice(idx));
+        slice.parentElement.addEventListener("touchstart", (e) => {
+          e.preventDefault();
+          rotateSlice(idx);
+        }, { passive: false });
+      });
+    }
+
+    async function startSboysSequence() {
+      if (sboysStarted) return;
+      sboysStarted = true;
+      if (!sboysScene || !sboysBlackout || !sboysBg) return;
+
+      // Prime audio inside the user gesture context to avoid autoplay blocking later.
+      sboysAudio.muted = true;
+      sboysAudio.volume = 0;
+      sboysAudio.currentTime = 0;
+      sboysAudio.play().catch(() => {});
+
+      sboysBlackout.classList.add("show");
+      window.setTimeout(() => {
+        if (musicNextScreen) musicNextScreen.classList.remove("show");
+        sboysScene.classList.add("show");
+        sboysBg.play().catch(() => {});
+      }, 700);
+      window.setTimeout(() => {
+        sboysBlackout.classList.remove("show");
+      }, 1700);
+
+      window.setTimeout(() => {
+        runSboysAudioAndLyrics();
+      }, 8000);
+    }
+
+    async function runSboysAudioAndLyrics() {
+      if (sboysLyricsRunning) return;
+      sboysLyricsRunning = true;
+      const lrcText = await fetchText("sboys.lrc");
+      const entries = parseLrc(lrcText);
+      const words = buildWordEvents(entries);
+      const phrases = buildPhraseEvents(words, 3, 5);
+      if (!phrases.length) {
+        sboysLyricsRunning = false;
+        return;
+      }
+
+      // Start audible playback exactly here with a clean restart.
+      sboysAudio.pause();
+      sboysAudio.currentTime = 0;
+      sboysAudio.muted = false;
+      sboysAudio.volume = 1;
+      await sboysAudio.play().catch(() => {});
+
+      let idx = -1;
+      let activeNode = null;
+      let ticker = 0;
+
+      const pushPhrase = (phrase) => {
+        if (!sboysLyrics) return null;
+        const node = document.createElement("div");
+        node.className = "sboys-phrase";
+        const list = Array.isArray(phrase.words) ? phrase.words : [];
+        list.forEach((w, i) => {
+          const span = document.createElement("span");
+          span.className = "sboys-word";
+          span.dataset.t = String(w.t);
+          span.textContent = w.text + (i < list.length - 1 ? " " : "");
+          node.appendChild(span);
+        });
+        sboysLyrics.innerHTML = "";
+        sboysLyrics.appendChild(node);
+        requestAnimationFrame(() => node.classList.add("show"));
+        return node;
+      };
+
+      const tick = () => {
+        const t = Number(sboysAudio.currentTime || 0);
+        while (idx + 1 < phrases.length && t >= (phrases[idx + 1].t - 0.02)) {
+          idx += 1;
+          activeNode = pushPhrase(phrases[idx]);
+        }
+        if (!activeNode) return;
+        const nextT = idx + 1 < phrases.length ? phrases[idx + 1].t : 1e9;
+        const spans = activeNode.querySelectorAll(".sboys-word");
+        spans.forEach((s, i) => {
+          const st = Number(s.dataset.t || 0);
+          const nt = i < spans.length - 1
+            ? Number(spans[i + 1].dataset.t || nextT)
+            : nextT;
+          s.classList.toggle("hot", t >= st && t < nt);
+        });
+        if (t >= nextT) activeNode.classList.add("fade");
+      };
+
+      ticker = window.setInterval(tick, 40);
+
+      runSboysClipAlternator(sboysAudio);
+      sboysAudio.addEventListener("ended", () => {
+        window.clearInterval(ticker);
+        if (sboysLyrics) sboysLyrics.innerHTML = "";
+        sboysLyricsRunning = false;
+        showSboysDoubleTap();
+      }, { once: true });
+    }
+
+    function showSboysDoubleTap() {
+      if (!sboysDoubleTap) return;
+      sboysDoubleTap.classList.add("show");
+      sboysPostReady = true;
+    }
+
+    function showSboysRiddle() {
+      if (!sboysRiddle || !sboysDoubleTap) return;
+      sboysDoubleTap.classList.remove("show");
+      sboysRiddle.classList.add("show");
+      if (!sboysRiddle.dataset.bound) {
+        sboysRiddle.dataset.bound = "1";
+        const normalizeWard = (text) =>
+          String(text || "")
+            .toLowerCase()
+            .replace(/[^a-z0-9\s]/g, " ")
+            .replace(/\s+/g, " ")
+            .trim()
+            .replace(/\bseventh\b/g, "7th")
+            .replace(/\b7\b/g, "7th");
+        const expected = "the 7th ward";
+        const check = () => {
+          const val = normalizeWard(sboysRiddleInput ? sboysRiddleInput.value : "");
+          if (!val) {
+            if (sboysRiddleStatus) sboysRiddleStatus.textContent = "Type your answer.";
+            return;
+          }
+          const ok = val === expected || val.endsWith("7th ward") || val.includes("the 7th ward");
+          if (ok) {
+            if (sboysRiddleStatus) sboysRiddleStatus.textContent = "Correct.";
+            startDjSpinTransition();
+          } else {
+            if (sboysRiddleStatus) sboysRiddleStatus.textContent = "Try again.";
+          }
+        };
+        if (sboysRiddleSubmit) sboysRiddleSubmit.addEventListener("click", check);
+        if (sboysRiddleInput) {
+          sboysRiddleInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") check();
+          });
+        }
+        if (sboysHintBtn) {
+          sboysHintBtn.addEventListener("click", () => {
+            if (sboysRiddleHint) sboysRiddleHint.textContent = "The missing number is lucky number seven.";
+          });
+        }
+      }
+    }
+
+    function startDjSpinTransition() {
+      if (djTransitionStarted || !sboysScene) return;
+      djTransitionStarted = true;
+      sboysScene.classList.add("dj-spin");
+      window.setTimeout(() => {
+        sboysScene.classList.remove("show");
+        if (djNextScreen) djNextScreen.classList.add("show");
+        initDjScreen();
+      }, 2350);
+    }
+
+    function startWarningFlow() {
+      if (warningFlowStarted || !djNextScreen || !warningScreen) return;
+      warningFlowStarted = true;
+
+      // Play alert audio immediately when this flow begins (mp3 first, wav fallback).
+      alertAudio.src = resolveMediaPath("alert.mp3");
+      alertAudio.play().catch(() => {
+        alertAudio.src = resolveMediaPath("alert.wav");
+        alertAudio.play().catch(() => {});
+      });
+
+      djNextScreen.classList.add("fade-out");
+      window.setTimeout(() => {
+        djNextScreen.classList.remove("show");
+        warningScreen.classList.add("show");
+      }, 7000);
+
+      if (warningSub) warningSub.classList.remove("show");
+      if (warningStartBtn) warningStartBtn.classList.remove("show");
+      window.setTimeout(() => {
+        if (warningSub) warningSub.classList.add("show");
+      }, 2000);
+      window.setTimeout(() => {
+        if (warningStartBtn) warningStartBtn.classList.add("show");
+      }, 4000);
+    }
+
+    function shuffleList(list) {
+      const out = list.slice();
+      for (let i = out.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const temp = out[i];
+        out[i] = out[j];
+        out[j] = temp;
+      }
+      return out;
+    }
+
+    function buildSpicyMediaPlan(totalDuration) {
+      const lead = "mine/first.jpg";
+      const others = MINE_MEDIA_FILES.filter((f) => f !== lead);
+      const shuffled = shuffleList(others);
+      const base = [lead, ...shuffled];
+      const videoInsertIndex = Math.max(2, Math.min(base.length - 1, Math.floor(base.length * 0.52)));
+      base.splice(videoInsertIndex, 0, MINE_VIDEO);
+      spicyMediaPlan = base.map((src) => ({ src, isVideo: /\.mp4$/i.test(src) }));
+      spicyMediaSlot = Math.max(2.8, totalDuration / Math.max(1, spicyMediaPlan.length));
+      spicyMediaIndex = -1;
+    }
+
+    function drawSpicyMedia(item) {
+      if (!spicyLayerA || !spicyLayerB || !item) return;
+      const incoming = spicyFrontLayer === 0 ? spicyLayerB : spicyLayerA;
+      const outgoing = spicyFrontLayer === 0 ? spicyLayerA : spicyLayerB;
+
+      outgoing.querySelectorAll("video").forEach((v) => {
+        try { v.pause(); } catch {}
+      });
+      incoming.innerHTML = "";
+      if (item.isVideo) {
+        const v = document.createElement("video");
+        v.src = resolveMediaPath(item.src);
+        v.muted = true;
+        v.playsInline = true;
+        v.preload = "metadata";
+        v.addEventListener("loadedmetadata", () => {
+          const d = Number(v.duration || 0);
+          if (d > 6) {
+            v.currentTime = Math.max(0, Math.random() * (d - 4.5));
+          }
+          v.play().catch(() => {});
+        }, { once: true });
+        incoming.appendChild(v);
+      } else {
+        const img = document.createElement("img");
+        img.src = resolveMediaPath(item.src);
+        img.alt = "Spicy memory";
+        incoming.appendChild(img);
+      }
+
+      const driftX = (Math.random() * 2.8 - 1.4).toFixed(2);
+      const driftY = (Math.random() * 2.4 - 1.2).toFixed(2);
+      incoming.style.transform = `translate(${driftX}%, ${driftY}%) scale(1.04)`;
+      incoming.classList.add("show");
+      outgoing.classList.remove("show");
+      window.setTimeout(() => {
+        if (!outgoing.classList.contains("show")) outgoing.innerHTML = "";
+      }, 900);
+      spicyFrontLayer = spicyFrontLayer === 0 ? 1 : 0;
+    }
+
+    function updateSpicyMedia(t) {
+      if (!spicyMediaPlan.length) return;
+      const idx = Math.min(spicyMediaPlan.length - 1, Math.max(0, Math.floor(t / spicyMediaSlot)));
+      if (idx === spicyMediaIndex) return;
+      spicyMediaIndex = idx;
+      drawSpicyMedia(spicyMediaPlan[idx]);
+    }
+
+    function pushSpicyPhrase(phrase) {
+      if (!spicyLyrics) return;
+      const node = document.createElement("div");
+      node.className = "spicy-phrase";
+      const words = Array.isArray(phrase.words) ? phrase.words : [];
+      words.forEach((w, i) => {
+        const span = document.createElement("span");
+        span.className = "spicy-word";
+        span.dataset.t = String(w.t);
+        span.textContent = w.text + (i < words.length - 1 ? " " : "");
+        node.appendChild(span);
+      });
+
+      if (spicyActivePhrase && spicyActivePhrase.isConnected) {
+        const previousNode = spicyActivePhrase;
+        previousNode.style.opacity = "0";
+        previousNode.style.transform = "translateY(-10px) scale(0.98)";
+        window.setTimeout(() => {
+          if (previousNode && previousNode.parentElement) previousNode.remove();
+        }, 220);
+      }
+
+      spicyLyrics.innerHTML = "";
+      spicyLyrics.appendChild(node);
+      requestAnimationFrame(() => node.classList.add("show"));
+      spicyActivePhrase = node;
+      spicyActiveWordSpans = Array.from(node.querySelectorAll(".spicy-word"));
+      const lastWordT = words.length ? Number(words[words.length - 1].t || phrase.t || 0) : Number(phrase.t || 0);
+      spicyActivePhraseEnd = Math.max(
+        Number(phrase.end || phrase.t || 0) + 0.52,
+        lastWordT + 0.45
+      );
+    }
+
+    function runSpicyTicker(phrases) {
+      spicyPhraseIndex = -1;
+      window.clearInterval(spicyTicker);
+      spicyTicker = window.setInterval(() => {
+        const t = Number(spicyAudio.currentTime || 0);
+        while (spicyPhraseIndex + 1 < phrases.length && t >= (phrases[spicyPhraseIndex + 1].t - 0.02)) {
+          spicyPhraseIndex += 1;
+          pushSpicyPhrase(phrases[spicyPhraseIndex]);
+        }
+
+        if (spicyActiveWordSpans.length && spicyPhraseIndex >= 0) {
+          const activePhrase = phrases[spicyPhraseIndex];
+          const nextT = spicyPhraseIndex + 1 < phrases.length ? phrases[spicyPhraseIndex + 1].t : 1e9;
+          spicyActiveWordSpans.forEach((span, i) => {
+            const st = Number(span.dataset.t || 0);
+            const nt = i < spicyActiveWordSpans.length - 1
+              ? Number(spicyActiveWordSpans[i + 1].dataset.t || nextT)
+              : nextT;
+            span.classList.toggle("hot", t >= st && t < nt);
+          });
+          if (t >= spicyActivePhraseEnd && spicyActivePhrase) {
+            const oldNode = spicyActivePhrase;
+            oldNode.classList.remove("show");
+            oldNode.style.opacity = "0";
+            oldNode.style.transform = "translateY(-10px) scale(0.98)";
+            window.setTimeout(() => {
+              if (oldNode && oldNode.parentElement) oldNode.remove();
+            }, 420);
+            spicyActivePhrase = null;
+            spicyActiveWordSpans = [];
+          } else if (activePhrase && t >= nextT && spicyActivePhrase) {
+            spicyActivePhrase.classList.remove("show");
+          }
+        }
+
+        updateSpicyMedia(t);
+      }, 42);
+    }
+
+    function normalizeSimpleText(text) {
+      return String(text || "")
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function buildPortlandHearts() {
+      if (!portlandHearts) return;
+      portlandHearts.innerHTML = "";
+      const total = 28;
+      for (let i = 0; i < total; i += 1) {
+        const heart = document.createElement("span");
+        heart.className = "portland-heart";
+        heart.textContent = "❤";
+        heart.style.left = `${Math.random() * 100}%`;
+        heart.style.animationDuration = `${7 + Math.random() * 8}s`;
+        heart.style.animationDelay = `${Math.random() * 4}s`;
+        heart.style.opacity = String(0.25 + Math.random() * 0.45);
+        portlandHearts.appendChild(heart);
+      }
+    }
+
+    function bindPortlandAnswer() {
+      if (portlandBound || !portlandSubmit || !portlandInput) return;
+      portlandBound = true;
+      const expected = "portland";
+      const check = () => {
+        const value = normalizeSimpleText(portlandInput.value);
+        if (!value) {
+          if (portlandStatus) portlandStatus.textContent = "Type your answer.";
+          return;
+        }
+        if (value === expected) {
+          if (portlandStatus) portlandStatus.textContent = "Correct.";
+          startGrandFinale();
+        } else {
+          if (portlandStatus) portlandStatus.textContent = "Try again.";
+        }
+      };
+      portlandSubmit.addEventListener("click", check);
+      portlandInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") check();
+      });
+    }
+
+    function showPortlandScreen() {
+      if (!portlandScreen) return;
+      if (spicyScene) spicyScene.classList.remove("show");
+      portlandScreen.classList.add("show");
+      buildPortlandHearts();
+      bindPortlandAnswer();
+    }
+
+    function buildFinaleHearts() {
+      if (!finaleHearts) return;
+      finaleHearts.innerHTML = "";
+      const total = 44;
+      for (let i = 0; i < total; i += 1) {
+        const h = document.createElement("span");
+        h.className = "finale-heart";
+        h.textContent = "❤";
+        h.style.left = `${Math.random() * 100}%`;
+        h.style.animationDuration = `${8 + Math.random() * 9}s`;
+        h.style.animationDelay = `${Math.random() * 5}s`;
+        h.style.color = Math.random() > 0.5 ? "rgba(178, 0, 28, 0.62)" : "rgba(35, 35, 35, 0.58)";
+        finaleHearts.appendChild(h);
+      }
+    }
+
+    function animateFinaleMessage() {
+      if (!finaleMessage) return Promise.resolve();
+      const text = "Well done, baby. You've finally reached the end. But before this is over... there's just one last riddle to solve.";
+      const words = text.split(/\s+/).filter(Boolean);
+      finaleMessage.innerHTML = "";
+      return new Promise((resolve) => {
+        words.forEach((word, idx) => {
+          const span = document.createElement("span");
+          span.className = "word";
+          span.textContent = word + " ";
+          finaleMessage.appendChild(span);
+          window.setTimeout(() => {
+            span.classList.add("show");
+            if (idx === words.length - 1) {
+              window.setTimeout(resolve, 320);
+            }
+          }, idx * 230);
+        });
+      });
+    }
+
+    function buildFinalePlaylist() {
+      const rootVideos = [
+        "486706365_9564767100246383_5037826799384444621_n.mp4",
+        "491502537_29144198338561758_5251055578283051740_n.mp4",
+        "550503525_31610978378515627_7063540022481866922_n.mp4",
+      ];
+      const assetsPhotos = [
+        "assets/photos/00100sPORTRAIT_00100_BURST20180124183741203_COVER.jpg",
+        "assets/photos/119353435_10223724812086242_7834424421694171934_n.jpg",
+        "assets/photos/134629885_10224526321203469_7846656643382640790_n.jpg",
+        "assets/photos/135224958_10224526328483651_1062580372796787506_n.jpg",
+        "assets/photos/142349667_1760354250804474_3773264866615419862_n.jpg",
+        "assets/photos/143340501_1760354307471135_5676928401996769087_n.jpg",
+        "assets/photos/179487570_1829742860532279_4559152444508427108_n.jpg",
+        "assets/photos/20240913_150031.jpg",
+        "assets/photos/20241225_235744.jpg",
+        "assets/photos/20241225_235804.jpg",
+        "assets/photos/20251025_182258.jpg",
+        "assets/photos/40636025_10217066440671118_5841736554325737472_n.jpg",
+        "assets/photos/454668552_10233005963189219_6925589581175694914_n.jpg",
+        "assets/photos/467569985_10234581772183459_991570956484358665_n.jpg",
+        "assets/photos/468175613_10234936140722451_8209923291269112515_n.jpg",
+        "assets/photos/481235865_2899803986859489_4659314865100105150_n.jpg",
+        "assets/photos/481701757_2899803910192830_1762372620446568743_n.jpg",
+        "assets/photos/502483408_10236954687304854_5964526656510184854_n.jpg",
+        "assets/photos/503783693_3004139589759261_8885014884760788638_n.jpg",
+        "assets/photos/50690201_1149551238551448_462596852844331008_n.jpg",
+        "assets/photos/50870251_1149551188551453_5945048298959142912_n.jpg",
+        "assets/photos/515496158_3063571780482708_2983783280733422102_n.jpg",
+        "assets/photos/571610843_3160782427428309_4489047227859127369_n.jpg",
+        "assets/photos/68848759_10219898366067483_386117542730530816_n.jpg",
+        "assets/photos/IMG_20170423_145520.jpg",
+        "assets/photos/IMG_20170801_011746.jpg",
+        "assets/photos/IMG_20170926_061621.jpg",
+        "assets/photos/PXL_20201031_043228517.PORTRAIT-01.COVER~2.jpg",
+        "assets/photos/PXL_20211226_000409304.jpg",
+        "assets/photos/received_611255021904942.jpeg",
+        "assets/photos/received_938726051343085~2.jpeg",
+      ];
+      const starPhotos = [
+        "star/480699470_2894857227354165_4819901431093675060_n.jpg",
+        "star/489280747_2939122942927593_4874166078410245614_n.jpg",
+        "star/489463679_2939412809565273_1207858651321423000_n.jpg",
+        "star/490549970_2947380865435134_4126739602186258324_n.jpg",
+        "star/502833193_2995600767279810_2418469616106989481_n.jpg",
+        "star/503632704_3003874733119080_8243110455520481139_n.jpg",
+        "star/504475898_3003874779785742_1877176787869076140_n.jpg",
+        "star/505318427_3003875089785711_4850345209815884473_n.jpg",
+        "star/514364937_3063565737149979_5006898716175594971_n.jpg",
+        "star/516376981_3034765493363337_5538960618020503218_n.jpg",
+        "star/this.jpeg",
+      ];
+      const talentPhotos = [
+        "talent/14786eb1-1c2f-44f9-8045-633da992e7fd.jpg",
+        "talent/20250209_143640.jpg",
+        "talent/20250921_130810.jpg",
+        "talent/20260123_183112.jpg",
+        "talent/4107ae66-43a4-4c37-9aa5-7fd2bf859748.jpg",
+        "talent/432297039_1469916203938543_3553440005527187178_n.jpg",
+        "talent/467484823_4022786471299164_50125181142503271_n.jpg",
+        "talent/487305304_2930869017086319_40763071033115672_n.jpg",
+        "talent/488081284_2933281143511773_6810070304849294189_n.jpg",
+        "talent/489054632_2937694886403732_8142723303700342018_n.jpg",
+        "talent/505571117_3009458662560687_1818780719073708449_n.jpg",
+        "talent/505747018_3009410139232206_1336769363724644602_n.jpg",
+        "talent/526700321_3063565653816654_3822287619816556191_n.jpg",
+        "talent/545649522_3102260883280464_5038114950545796325_n.jpg",
+        "talent/545696467_3102273749945844_4173238359941364791_n.jpg",
+        "talent/562776194_1336884147980404_7863387728849874208_n.jpg",
+        "talent/973e7be1-b327-4922-8bbe-e219cec3d067.jpg",
+        "talent/FB_IMG_1770351621460.jpg",
+        "talent/VideoCapture_20240627-004214.jpg",
+      ];
+
+      const photos = [...assetsPhotos, ...starPhotos, ...talentPhotos];
+      const uniquePhotos = Array.from(new Set(photos));
+      const shuffledPhotos = shuffleList(uniquePhotos);
+      const mix = [];
+      const insertEvery = Math.max(10, Math.floor(shuffledPhotos.length / 3));
+      let v = 0;
+      for (let i = 0; i < shuffledPhotos.length; i += 1) {
+        mix.push({ src: shuffledPhotos[i], isVideo: false });
+        if ((i + 1) % insertEvery === 0 && v < rootVideos.length) {
+          mix.push({ src: rootVideos[v], isVideo: true });
+          v += 1;
+        }
+      }
+      while (v < rootVideos.length) {
+        mix.push({ src: rootVideos[v], isVideo: true });
+        v += 1;
+      }
+      return mix;
+    }
+
+    function showFinaleMediaItem(item) {
+      if (!item || !finaleLayerA || !finaleLayerB) return;
+      const incoming = finaleFrontLayer === 0 ? finaleLayerB : finaleLayerA;
+      const outgoing = finaleFrontLayer === 0 ? finaleLayerA : finaleLayerB;
+      outgoing.querySelectorAll("video").forEach((v) => {
+        try { v.pause(); } catch {}
+      });
+      incoming.innerHTML = "";
+      if (item.isVideo) {
+        const v = document.createElement("video");
+        v.src = resolveMediaPath(item.src);
+        v.muted = true;
+        v.playsInline = true;
+        v.preload = "metadata";
+        v.addEventListener("loadedmetadata", () => {
+          const d = Number(v.duration || 0);
+          if (d > 8) {
+            v.currentTime = Math.max(0, Math.random() * (d - 6));
+          }
+          v.play().catch(() => {});
+        }, { once: true });
+        incoming.appendChild(v);
+      } else {
+        const img = document.createElement("img");
+        img.src = resolveMediaPath(item.src);
+        img.alt = "Memory";
+        incoming.appendChild(img);
+      }
+      const driftX = (Math.random() * 2.8 - 1.4).toFixed(2);
+      const driftY = (Math.random() * 2.4 - 1.2).toFixed(2);
+      incoming.style.transform = `translate(${driftX}%, ${driftY}%) scale(1.04)`;
+      incoming.classList.add("show");
+      outgoing.classList.remove("show");
+      window.setTimeout(() => {
+        if (!outgoing.classList.contains("show")) outgoing.innerHTML = "";
+      }, 900);
+      finaleFrontLayer = finaleFrontLayer === 0 ? 1 : 0;
+    }
+
+    function startFinaleSlideshow() {
+      const playlist = buildFinalePlaylist();
+      if (!playlist.length) return;
+      finaleMediaIndex = -1;
+      window.clearInterval(finaleMediaTimer);
+      const run = () => {
+        finaleMediaIndex = (finaleMediaIndex + 1) % playlist.length;
+        showFinaleMediaItem(playlist[finaleMediaIndex]);
+      };
+      run();
+      finaleMediaTimer = window.setInterval(run, 3200);
+    }
+
+    function bindFinaleMenu() {
+      const stopFinale = () => {
+        window.clearInterval(finaleMediaTimer);
+        window.clearTimeout(finaleSongTimer);
+        try {
+          finaleSong.pause();
+          finaleSong.currentTime = 0;
+        } catch {
+          // no-op
+        }
+      };
+      if (menuReplayScream && !menuReplayScream.dataset.bound) {
+        menuReplayScream.dataset.bound = "1";
+        menuReplayScream.addEventListener("click", () => {
+          stopFinale();
+          location.reload();
+        });
+      }
+      if (menuReplaySong && !menuReplaySong.dataset.bound) {
+        menuReplaySong.dataset.bound = "1";
+        menuReplaySong.addEventListener("click", () => {
+          stopFinale();
+          try {
+            const key = "vday_progress_v1";
+            const raw = localStorage.getItem(key);
+            const next = raw ? JSON.parse(raw) : {};
+            const merged = {
+              state: "song",
+              foundClues: Array.isArray(next.foundClues) ? next.foundClues : [],
+              attempts: Number(next.attempts || 0),
+              ...next,
+              state: "song",
+            };
+            localStorage.setItem(key, JSON.stringify(merged));
+          } catch {
+            localStorage.setItem("vday_progress_v1", JSON.stringify({
+              state: "song",
+              foundClues: [],
+              attempts: 0,
+            }));
+          }
+          window.location.href = "index.html";
+        });
+      }
+      if (menuReplaySboys && !menuReplaySboys.dataset.bound) {
+        menuReplaySboys.dataset.bound = "1";
+        menuReplaySboys.addEventListener("click", () => {
+          stopFinale();
+          if (grandFinale) grandFinale.classList.remove("show");
+          if (portlandScreen) portlandScreen.classList.remove("show");
+          if (warningScreen) warningScreen.classList.remove("show");
+          if (sboysScene) sboysScene.classList.add("show");
+          if (sboysBg) sboysBg.play().catch(() => {});
+          runSboysAudioAndLyrics();
+        });
+      }
+      if (menuReplaySpicy && !menuReplaySpicy.dataset.bound) {
+        menuReplaySpicy.dataset.bound = "1";
+        menuReplaySpicy.addEventListener("click", () => {
+          stopFinale();
+          if (grandFinale) grandFinale.classList.remove("show");
+          if (portlandScreen) portlandScreen.classList.remove("show");
+          if (spicyScene) spicyScene.classList.add("show");
+          spicyStarted = false;
+          startSpicyScene();
+        });
+      }
+      if (menuRestartAll && !menuRestartAll.dataset.bound) {
+        menuRestartAll.dataset.bound = "1";
+        menuRestartAll.addEventListener("click", () => {
+          stopFinale();
+          location.reload();
+        });
+      }
+    }
+
+    function startGrandFinale() {
+      if (finaleStarted || !grandFinale) return;
+      finaleStarted = true;
+      try {
+        finaleSong.muted = true;
+        finaleSong.currentTime = 0;
+        finaleSong.play().then(() => {
+          finaleSong.pause();
+          finaleSong.currentTime = 0;
+          finaleSong.muted = false;
+        }).catch(() => {});
+      } catch {
+        // no-op
+      }
+      if (portlandScreen) {
+        portlandScreen.style.opacity = "0";
+        portlandScreen.style.transition = "opacity 0.7s ease";
+      }
+      window.setTimeout(() => {
+        if (portlandScreen) {
+          portlandScreen.classList.remove("show");
+          portlandScreen.style.opacity = "";
+          portlandScreen.style.transition = "";
+        }
+        grandFinale.classList.add("show");
+        if (finaleRiddle) finaleRiddle.classList.remove("show");
+        if (finaleMenu) finaleMenu.classList.remove("show");
+        const finaleSlideshow = document.getElementById("finaleSlideshow");
+        if (finaleSlideshow) finaleSlideshow.classList.remove("show");
+        if (finaleMessage) finaleMessage.innerHTML = "";
+        buildFinaleHearts();
+        bindFinaleMenu();
+
+        animateFinaleMessage().then(() => {
+          window.setTimeout(() => {
+            if (finaleRiddle) finaleRiddle.classList.add("show");
+            const finaleSlideshow = document.getElementById("finaleSlideshow");
+            if (finaleSlideshow) finaleSlideshow.classList.add("show");
+            startFinaleSlideshow();
+            if (finaleMenu) finaleMenu.classList.add("show");
+            try {
+              finaleSong.pause();
+              finaleSong.currentTime = 0;
+              finaleSong.play().catch(() => {});
+            } catch {
+              // no-op
+            }
+          }, 2000);
+        });
+      }, 700);
+    }
+
+    function runSpicyOutro() {
+      if (!spicyScene) return;
+      if (spicyLayerA) spicyLayerA.style.opacity = "0";
+      if (spicyLayerB) spicyLayerB.style.opacity = "0";
+      if (spicyLyrics) spicyLyrics.style.opacity = "0";
+      if (spicyOutro) spicyOutro.classList.add("show");
+      window.setTimeout(() => {
+        showPortlandScreen();
+      }, 2300);
+    }
+
+    async function startSpicyScene() {
+      if (spicyStarted || !spicyScene) return;
+      spicyStarted = true;
+      if (spicyLayerA) spicyLayerA.style.opacity = "";
+      if (spicyLayerB) spicyLayerB.style.opacity = "";
+      if (spicyLyrics) spicyLyrics.style.opacity = "";
+      if (spicyOutro) spicyOutro.classList.remove("show");
+
+      const lrcText = await fetchText("spicy.lrc");
+      const entries = parseLrc(lrcText);
+      const words = buildWordEvents(entries);
+      const phrases = buildPhraseEvents(words, 3, 5);
+
+      spicyAudio.pause();
+      spicyAudio.currentTime = 0;
+      spicyAudio.muted = false;
+      spicyAudio.volume = 1;
+      buildSpicyMediaPlan(Math.max(30, Number(spicyAudio.duration || 0) || 180));
+      updateSpicyMedia(0);
+
+      try {
+        await spicyAudio.play();
+      } catch {
+        spicyStarted = false;
+        return;
+      }
+
+      if (Number.isFinite(spicyAudio.duration) && spicyAudio.duration > 1) {
+        buildSpicyMediaPlan(spicyAudio.duration);
+      }
+      runSpicyTicker(phrases);
+
+      spicyAudio.addEventListener("ended", () => {
+        window.clearInterval(spicyTicker);
+        runSpicyOutro();
+      }, { once: true });
+    }
+
+    function initDjScreen() {
+      if (djScreenReady || !djScroll) return;
+      djScreenReady = true;
+
+      const talentImages = [
+        "talent/14786eb1-1c2f-44f9-8045-633da992e7fd.jpg",
+        "talent/20250209_143640.jpg",
+        "talent/20250921_130810.jpg",
+        "talent/20260123_183112.jpg",
+        "talent/4107ae66-43a4-4c37-9aa5-7fd2bf859748.jpg",
+        "talent/432297039_1469916203938543_3553440005527187178_n.jpg",
+        "talent/467484823_4022786471299164_50125181142503271_n.jpg",
+        "talent/487305304_2930869017086319_40763071033115672_n.jpg",
+        "talent/488081284_2933281143511773_6810070304849294189_n.jpg",
+        "talent/489054632_2937694886403732_8142723303700342018_n.jpg",
+        "talent/505571117_3009458662560687_1818780719073708449_n.jpg",
+        "talent/505747018_3009410139232206_1336769363724644602_n.jpg",
+        "talent/526700321_3063565653816654_3822287619816556191_n.jpg",
+        "talent/545649522_3102260883280464_5038114950545796325_n.jpg",
+        "talent/545696467_3102273749945844_4173238359941364791_n.jpg",
+        "talent/562776194_1336884147980404_7863387728849874208_n.jpg",
+        "talent/973e7be1-b327-4922-8bbe-e219cec3d067.jpg",
+        "talent/FB_IMG_1770351621460.jpg",
+        "talent/VideoCapture_20240627-004214.jpg",
+      ];
+
+      const pickTalent = () => talentImages[Math.floor(Math.random() * talentImages.length)];
+
+      const makeNote = (text, cls = "top-note", side = "") => {
+        const el = document.createElement("article");
+        el.className = cls;
+        if (side) el.dataset.side = side;
+        el.innerHTML = `
+          <div class="note-holes"><span></span><span></span><span></span></div>
+          <div class="note-margin"></div>
+        `;
+        const p = document.createElement("p");
+        p.className = "note-text";
+        p.textContent = text;
+        el.appendChild(p);
+        return el;
+      };
+
+      const makePhoto = (src) => {
+        const el = document.createElement("div");
+        el.className = "photo-block";
+        const img = document.createElement("img");
+        img.src = resolveMediaPath(src);
+        img.alt = "Talent";
+        el.appendChild(img);
+        return el;
+      };
+
+      const topText = `It's not just that you're good at everything you do it's the way you approach life. Whether you're perfecting a graphic design or figuring out how to reach a kid in your classroom  you do it with so much heart. I love that when you decide you want to learn something you don't just try you conquer it. Your mind is a beautiful place.`;
+      djScroll.appendChild(makeNote(topText, "top-note"));
+      djScroll.appendChild(makePhoto(pickTalent()));
+      djScroll.appendChild(
+        makeNote(
+          "It takes a special kind of heart to teach kids. The patience and love you give them every day shows exactly who you are a person who wants to leave the world better than you found it.",
+          "notes-note",
+          "right"
+        )
+      );
+      djScroll.appendChild(
+        makeNote(
+          "I'm constantly in awe of the way your brain works. You look at a problem and immediately see the solution. You have a builder's soul you understand how things fit together before they're even finished.",
+          "notes-note",
+          "left"
+        )
+      );
+      djScroll.appendChild(
+        makeNote(
+          "The most attractive thing about you is that no isn't in your vocabulary. If you set your mind to it  it's as good as done. You're a literal force of nature, and there is nothing you can't master.",
+          "notes-note",
+          "right"
+        )
+      );
+      djScroll.appendChild(makePhoto(pickTalent()));
+      djScroll.appendChild(
+        makeNote(
+          `You honestly surprise me every day  even after all these years. Your eagerness to experiment and find creative ways to tackle life is a gift I truly admire. Your talent seems never ending from this new baking adventure to everything you pour into your classroom and those kids. It's inspiring  to say the least.
+
+I just want you to know you're doing an amazing job. I'm so proud of you and how well you're handling everything  from the daily posting to finding your new routines. You're just missing your partner in crime. I know I haven't been my best lately, but I don't want to cloud this moment. This is for you, and you only... well, except for that last bit. That was a tiny bit for me.`,
+          "poem-note"
+        )
+      );
+
+      const continueWrap = document.createElement("div");
+      continueWrap.className = "continue-wrap";
+      continueWrap.innerHTML = `<button class="continue-btn" id="djContinueBtn" type="button">Continue</button>`;
+      djScroll.appendChild(continueWrap);
+
+      const splitWords = (p) => {
+        const text = p.textContent || "";
+        p.innerHTML = "";
+        const lines = text.split("\n");
+        lines.forEach((line, lineIdx) => {
+          line.split(" ").filter(Boolean).forEach((word) => {
+            const span = document.createElement("span");
+            span.className = "note-word";
+            span.textContent = word + " ";
+            p.appendChild(span);
+          });
+          if (lineIdx < lines.length - 1) p.appendChild(document.createElement("br"));
+        });
+      };
+
+      djScroll.querySelectorAll(".top-note .note-text, .poem-note .note-text, .notes-note .note-text").forEach(splitWords);
+      setupFinalScrollFlow(djScroll);
+
+      const obs = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) entry.target.classList.add("inview");
+          });
+        },
+        { threshold: 0.4, root: djScroll }
+      );
+      obs.observe(continueWrap);
+
+      const continueBtn = continueWrap.querySelector("#djContinueBtn");
+      if (continueBtn) {
+        continueBtn.addEventListener("click", () => {
+          startWarningFlow();
+        });
+      }
+    }
+
+    function runSboysClipAlternator(audioRef) {
+      const clips = [
+        "sboys/3e8448d6-f6c2-4b6d-a73d-3efeebf1dc9c.mp4",
+      ];
+      let active = sboysClipA;
+      let incoming = sboysClipB;
+      let last = "";
+
+      const pick = () => {
+        const pool = clips.filter((c) => c !== last);
+        const src = pool[Math.floor(Math.random() * pool.length)];
+        last = src;
+        return src;
+      };
+
+      const loadAndShow = (videoEl, src) => {
+        videoEl.classList.remove("show");
+        videoEl.src = resolveMediaPath(src);
+        const onMeta = () => {
+          const d = Number(videoEl.duration || 0);
+          if (d > 6) {
+            videoEl.currentTime = Math.max(0, Math.random() * (d - 4));
+          }
+          videoEl.play().catch(() => {});
+          videoEl.classList.add("show");
+        };
+        videoEl.onloadedmetadata = onMeta;
+      };
+
+      const loop = () => {
+        if (!audioRef || audioRef.paused || audioRef.ended) return;
+        const src = pick();
+        loadAndShow(incoming, src);
+        active.classList.remove("show");
+        const hold = 3200 + Math.random() * 2600;
+        const next = () => {
+          const tmp = active;
+          active = incoming;
+          incoming = tmp;
+          if (audioRef && !audioRef.paused && !audioRef.ended) {
+            window.setTimeout(loop, 280);
+          }
+        };
+        window.setTimeout(next, hold);
+      };
+
+      loop();
+    }
+
+    skipBtn.addEventListener("click", () => {
+      if (player && !isNaN(player.duration)) {
+        player.currentTime = Math.max(0, STOP_AT - 5);
+      }
+      skipBtn.classList.remove("show");
+    });
+
+    if (whiteStartBtn) {
+      whiteStartBtn.addEventListener("click", () => {
+        startSboysSequence();
+      });
+    }
+
+    if (sboysScene) {
+      const onTap = () => {
+        if (!sboysPostReady || !sboysDoubleTap || !sboysDoubleTap.classList.contains("show")) return;
+        const now = Date.now();
+        if (now - sboysLastTap < 380) {
+          sboysPostReady = false;
+          showSboysRiddle();
+        }
+        sboysLastTap = now;
+      };
+      sboysScene.addEventListener("touchend", onTap);
+      sboysScene.addEventListener("click", onTap);
+    }
+
+    if (sboysSkipBtn) {
+      sboysSkipBtn.addEventListener("click", () => {
+        if (!sboysAudio || Number.isNaN(sboysAudio.duration)) return;
+        sboysAudio.currentTime = Math.max(0, sboysAudio.duration - 2);
+      });
+    }
+
+    if (warningStartBtn) {
+      warningStartBtn.addEventListener("click", () => {
+        if (!warningScreen || !spicyScene) return;
+        // Prime media in the click gesture so delayed audio start is allowed on mobile.
+        spicyAudio.muted = true;
+        spicyAudio.currentTime = 0;
+        spicyAudio.play().then(() => {
+          spicyAudio.pause();
+          spicyAudio.currentTime = 0;
+          spicyAudio.muted = false;
+        }).catch(() => {});
+        warningScreen.classList.add("fade-out");
+        try {
+          alertAudio.pause();
+          alertAudio.currentTime = 0;
+        } catch {
+          // no-op
+        }
+        window.setTimeout(() => {
+          warningScreen.classList.remove("show");
+          warningScreen.style.display = "none";
+          warningScreen.classList.remove("fade-out");
+          spicyScene.classList.add("show");
+          document.body.style.background = "#ffffff";
+        }, 450);
+        window.setTimeout(() => {
+          startSpicyScene();
+        }, 5000);
+      });
+    }
+
+    if (spicySkipBtn) {
+      spicySkipBtn.addEventListener("click", () => {
+        if (!spicyAudio || Number.isNaN(spicyAudio.duration)) return;
+        spicyAudio.currentTime = Math.max(0, spicyAudio.duration - 2);
+      });
+    }
+
+    MEDIA_MAP_READY.finally(() => {
+      window.setTimeout(() => {
+        gate.style.display = "flex";
+      }, 5000);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+﻿{
+  "required": ["tear-rose", "pocket-moon", "flip-spark"],
+  "items": [
+    {
+      "id": "tear-rose",
+      "type": "tear",
+      "title": "Tear Reveal",
+      "prompt": "Slide the tab",
+      "content": "Clue word: ROSE"
+    },
+    {
+      "id": "pocket-moon",
+      "type": "pocket",
+      "title": "Pocket Note",
+      "content": "Clue word: MOON"
+    },
+    {
+      "id": "flip-spark",
+      "type": "flip",
+      "title": "Flip Photo",
+      "front": "Tap to flip",
+      "content": "Clue word: SPARK"
+    }
+  ]
+}
