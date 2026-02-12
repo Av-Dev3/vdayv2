@@ -8,7 +8,7 @@
   <style>
     @font-face {
       font-family: "Dark Side of the Moon";
-      src: url("Dark Side of the Moon.ttf") format("truetype");
+      src: url("https://nkpumeoaywkvgzuredzj.supabase.co/storage/v1/object/public/media/Dark%20Side%20of%20the%20Moon.ttf") format("truetype");
       font-weight: 400;
       font-style: normal;
       font-display: swap;
@@ -16,7 +16,7 @@
 
     @font-face {
       font-family: "Plain Germanica";
-      src: url("Plain Germanica.ttf") format("truetype");
+      src: url("https://nkpumeoaywkvgzuredzj.supabase.co/storage/v1/object/public/media/Plain%20Germanica.ttf") format("truetype");
       font-weight: 400;
       font-style: normal;
       font-display: swap;
@@ -1751,10 +1751,7 @@
 </head>
 <body>
   <div class="bg-wrap">
-    <video class="bg-video" autoplay muted loop playsinline preload="auto">
-      <source src="scream_background.mp4" type="video/mp4" />
-      <source src="assets/scream_background.mp4" type="video/mp4" />
-    </video>
+    <video class="bg-video" autoplay muted loop playsinline preload="auto"></video>
   </div>
   <video id="screamLayer" class="scream-layer" playsinline preload="auto"></video>
   <div class="grain"></div>
@@ -1899,9 +1896,7 @@
   <div class="sboys-blackout" id="sboysBlackout"></div>
   <div class="sboys-scene" id="sboysScene">
     <button id="sboysSkipBtn" class="sboys-skip" type="button">Skip to End</button>
-    <video id="sboysBg" class="sboys-bg" playsinline muted loop preload="auto">
-      <source src="sboys_background.mp4" type="video/mp4" />
-    </video>
+    <video id="sboysBg" class="sboys-bg" playsinline muted loop preload="auto"></video>
     <div class="sboys-clips">
       <video id="sboysClipA" class="sboys-clip" playsinline muted preload="metadata"></video>
       <video id="sboysClipB" class="sboys-clip" playsinline muted preload="metadata"></video>
@@ -2107,7 +2102,7 @@
     let whiteCurrentRotations = [0, 0, 0];
     let whiteRotateHandlersBound = false;
     let sboysStarted = false;
-    const sboysAudio = new Audio(resolveMediaPath("sboys.mp3"));
+    const sboysAudio = new Audio();
     sboysAudio.preload = "auto";
     let sboysLyricsRunning = false;
     let sboysPostReady = false;
@@ -2117,7 +2112,7 @@
     let warningFlowStarted = false;
     const alertAudio = new Audio();
     alertAudio.preload = "auto";
-    const spicyAudio = new Audio(resolveMediaPath("spicy.mp4"));
+    const spicyAudio = new Audio();
     spicyAudio.preload = "auto";
     let spicyStarted = false;
     let spicyPhraseIndex = -1;
@@ -2135,7 +2130,7 @@
     let finaleSongTimer = 0;
     let finaleMediaIndex = -1;
     let finaleFrontLayer = 0;
-    const finaleSong = new Audio(resolveMediaPath("song.mp3"));
+    const finaleSong = new Audio();
     finaleSong.preload = "auto";
     const MINE_MEDIA_FILES = [
       "mine/first.jpg",
@@ -4043,6 +4038,20 @@ I just want you to know you're doing an amazing job. I'm so proud of you and how
     }
 
     MEDIA_MAP_READY.finally(() => {
+      const bgVideo = document.querySelector(".bg-video");
+      if (bgVideo) {
+        bgVideo.src = resolveMediaPath("scream_background.mp4");
+        bgVideo.load();
+        bgVideo.play().catch(() => {});
+      }
+      if (sboysBg) {
+        sboysBg.src = resolveMediaPath("sboys_background.mp4");
+        sboysBg.load();
+      }
+      sboysAudio.src = resolveMediaPath("sboys.mp3");
+      spicyAudio.src = resolveMediaPath("spicy.mp4");
+      finaleSong.src = resolveMediaPath("song.mp3");
+
       window.setTimeout(() => {
         gate.style.display = "flex";
       }, 5000);
