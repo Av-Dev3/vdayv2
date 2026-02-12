@@ -2,7 +2,7 @@
   const el = document.createElement("section");
   el.className = "scene";
   el.innerHTML = `
-    <div class="panel">
+    <div class="panel envelope-panel">
       <h2>Click to open</h2>
       <div class="envlope-wrapper">
         <div id="envelope" class="close">

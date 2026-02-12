@@ -5,11 +5,11 @@ export function mountPassword(container, ctx) {
   el.className = "scene";
 
   el.innerHTML = `
-    <div class="panel">
+    <div class="panel password-panel">
       <h1>Welcome, love</h1>
       <p>Enter the password to begin.</p>
       <input class="input" type="password" placeholder="Secret word" />
-      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <div class="password-actions">
         <button class="btn">Unlock</button>
         <button class="btn secondary" data-role="hint">Hint</button>
       </div>
