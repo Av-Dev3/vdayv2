@@ -101,7 +101,7 @@ Nothing else can even compare.`;
   container.appendChild(el);
 
   const noteText =
-    "Chucky said it best: friends 'til the end. But we are so much more. " +
+    "Chucky said it best friends 'til the end. But we are so much more. " +
     "You possess my soul more than any doll ever could. " +
     "Happy Valentine's Day to my partner in crime.";
 
