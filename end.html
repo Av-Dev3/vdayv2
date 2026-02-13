@@ -663,10 +663,20 @@
       width: 100%;
       height: 100%;
       background: #ffffff;
-      display: grid;
-      place-items: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       position: relative;
       overflow: hidden;
+    }
+
+    .white-rotator-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
     }
 
     .white-title {
@@ -747,10 +757,7 @@
     }
 
     .white-rotator-status {
-      position: absolute;
-      left: 50%;
-      top: calc(50% + min(44vw, 220px) + 20px);
-      transform: translateX(-50%);
+      position: static;
       min-height: 18px;
       font-size: 0.78rem;
       color: #333;
@@ -1833,12 +1840,14 @@
   <div class="music-note-transition" id="musicNoteTransition"></div>
   <div class="music-next-screen" id="musicNextScreen">
     <div class="white-screen">
-      <div class="white-rotator" id="whiteRotator">
-        <div class="rotator-slice" data-slice="0"><div class="slice-inner" id="slice0"></div></div>
-        <div class="rotator-slice" data-slice="1"><div class="slice-inner" id="slice1"></div></div>
-        <div class="rotator-slice" data-slice="2"><div class="slice-inner" id="slice2"></div></div>
+      <div class="white-rotator-wrap">
+        <div class="white-rotator" id="whiteRotator">
+          <div class="rotator-slice" data-slice="0"><div class="slice-inner" id="slice0"></div></div>
+          <div class="rotator-slice" data-slice="1"><div class="slice-inner" id="slice1"></div></div>
+          <div class="rotator-slice" data-slice="2"><div class="slice-inner" id="slice2"></div></div>
+        </div>
+        <div class="white-rotator-status" id="whiteRotateStatus">Tap each strip to rotate and fix the image</div>
       </div>
-      <div class="white-rotator-status" id="whiteRotateStatus">Tap each strip to rotate and fix the image</div>
       <button id="whiteStartBtn" class="white-start" type="button">Start</button>
     </div>
   </div>
