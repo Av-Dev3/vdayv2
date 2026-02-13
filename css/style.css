@@ -349,10 +349,11 @@ p {
 .card-letter p {
   margin: 0 0 10px;
   color: #4f2d33;
-  line-height: 1.52;
+  line-height: 1.7;
   font-size: clamp(0.92rem, 2.95vw, 1.05rem);
   font-family: "Segoe Print", "Bradley Hand", "Comic Sans MS", cursive;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.015em;
+  word-spacing: 0.12em;
 }
 
 .card-line-lead {
@@ -368,6 +369,7 @@ p {
   display: inline-block;
   opacity: 0;
   transform: translateY(8px);
+  margin-right: 0.08em;
 }
 
 .card-word.show {
