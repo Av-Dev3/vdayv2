@@ -313,6 +313,53 @@ p {
   gap: 10px;
 }
 
+.card-inner {
+  justify-content: flex-start;
+  align-items: stretch;
+  text-align: left;
+  padding: 18px;
+  overflow: hidden;
+}
+
+.card-letter {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.45s ease, transform 0.45s ease;
+  overflow-y: auto;
+  max-height: calc(100% - 66px);
+  padding-right: 6px;
+}
+
+.card-letter.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.card-letter p {
+  margin: 0 0 10px;
+  color: #4b2a31;
+  line-height: 1.45;
+  font-size: clamp(0.9rem, 2.8vw, 1.02rem);
+}
+
+.card-begin {
+  align-self: center;
+  margin-top: auto;
+  min-width: 150px;
+  background: linear-gradient(135deg, #d85c75, #b53b5a);
+  box-shadow: 0 12px 24px rgba(181, 59, 90, 0.32);
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.card-begin.show {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
 .card-front {
   position: relative;
   background:
@@ -323,6 +370,7 @@ p {
     ),
     linear-gradient(160deg, rgba(255, 243, 247, 0.88), rgba(246, 193, 208, 0.84));
   border: 1px solid rgba(190, 83, 113, 0.3);
+  text-align: center;
 }
 
 .card-front::before {
@@ -340,6 +388,11 @@ p {
   color: #8e2f4d;
   letter-spacing: 0.03em;
   text-shadow: 0 8px 16px rgba(142, 47, 77, 0.18);
+  width: 100%;
+  display: block;
+  text-align: center;
+  position: relative;
+  z-index: 2;
 }
 
 .card-front h2::after {
@@ -351,6 +404,19 @@ p {
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: rgba(104, 33, 51, 0.8);
+}
+
+.card-front::after {
+  content: "❤   ❤   ❤";
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  font-size: clamp(0.9rem, 3vw, 1.2rem);
+  letter-spacing: 0.5em;
+  color: rgba(169, 52, 88, 0.7);
+  text-shadow: 0 6px 12px rgba(89, 22, 43, 0.2);
+  pointer-events: none;
 }
 
 .lyrics-layout {
