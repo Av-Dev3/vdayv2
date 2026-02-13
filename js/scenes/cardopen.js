@@ -6,20 +6,7 @@ export function mountCardOpen(container, ctx) {
     <div class="card">
       <div class="card-base">
         <div class="card-inner">
-          <div class="card-letter">
-            <p>My love,</p>
-            <p>
-              This Valentine's Day I wanted to give you something a little different.
-              Not just a gift but an experience made just for you. I put this together
-              with you in my heart because you deserve something thoughtful personal and
-              a little magical.
-            </p>
-            <p>
-              Thank you for being my favorite person my comfort and my chaos all at once.
-              I'm so lucky I get to love you.
-            </p>
-            <p>Happy Valentine's Day<br>Yours always</p>
-          </div>
+          <div class="card-letter"></div>
           <button class="btn card-begin" type="button">Begin</button>
         </div>
       </div>
@@ -34,11 +21,60 @@ export function mountCardOpen(container, ctx) {
   const cover = el.querySelector(".card-cover");
   const beginBtn = el.querySelector(".card-begin");
   const letter = el.querySelector(".card-letter");
+  const lines = [
+    "My love,",
+    "This Valentine's Day I wanted to give you something a little different. Not just a gift but an experience made just for you. I put this together with you in my heart because you deserve something thoughtful personal and a little magical.",
+    "Thank you for being my favorite person my comfort and my chaos all at once. I'm so lucky I get to love you.",
+    "Happy Valentine's Day",
+    "Yours always",
+  ];
   let opened = false;
 
+  function buildLetter() {
+    letter.innerHTML = "";
+    lines.forEach((line, idx) => {
+      const p = document.createElement("p");
+      if (idx === 0) p.classList.add("card-line-lead");
+      if (idx === lines.length - 1) p.classList.add("card-line-signoff");
+      line.split(/\s+/).filter(Boolean).forEach((word, wIdx, arr) => {
+        const span = document.createElement("span");
+        span.className = "card-word";
+        span.textContent = word + (wIdx < arr.length - 1 ? " " : "");
+        p.appendChild(span);
+      });
+      letter.appendChild(p);
+    });
+  }
+
+  function animateWords() {
+    const words = Array.from(letter.querySelectorAll(".card-word"));
+    if (!words.length) {
+      beginBtn.classList.add("show");
+      return;
+    }
+    if (window.gsap) {
+      window.gsap.to(words, {
+        opacity: 1,
+        y: 0,
+        duration: 0.28,
+        ease: "power2.out",
+        stagger: 0.035,
+        onComplete: () => beginBtn.classList.add("show"),
+      });
+      return;
+    }
+    words.forEach((word, idx) => {
+      window.setTimeout(() => {
+        word.classList.add("show");
+        if (idx === words.length - 1) beginBtn.classList.add("show");
+      }, idx * 42);
+    });
+  }
+
   function revealInside() {
+    buildLetter();
     letter.classList.add("show");
-    beginBtn.classList.add("show");
+    animateWords();
   }
 
   function openCard() {
@@ -65,4 +101,3 @@ export function mountCardOpen(container, ctx) {
     cover.removeEventListener("click", openCard);
   };
 }
-
