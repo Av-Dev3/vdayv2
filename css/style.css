@@ -369,7 +369,11 @@ p {
   display: inline-block;
   opacity: 0;
   transform: translateY(8px);
-  margin-right: 0.08em;
+  margin-right: 0.28em;
+}
+
+.card-word:last-child {
+  margin-right: 0;
 }
 
 .card-word.show {
