@@ -22,11 +22,11 @@ export function mountCardOpen(container, ctx) {
   const beginBtn = el.querySelector(".card-begin");
   const letter = el.querySelector(".card-letter");
   const lines = [
-    "My love,",
-    "This Valentine's Day I wanted to give you something a little different. Not just a gift but an experience made just for you. I put this together with you in my heart because you deserve something thoughtful personal and a little magical.",
-    "Thank you for being my favorite person my comfort and my chaos all at once. I'm so lucky I get to love you.",
-    "Happy Valentine's Day",
-    "Yours always",
+    "Hey my love,",
+    "I know this isn't the usual kind of Valentine's gift but I wanted to make you something a little different this year. I put this together just for you and I hope its a fun little experience.",
+    "Thank you for being you. For the laughs the comfort the chaos all of it. I'm really lucky I get to love you.",
+    "Happy Valentine's Day ❤️",
+    "Always yours",
   ];
   let opened = false;
 
