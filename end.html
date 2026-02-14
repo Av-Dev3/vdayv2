@@ -3347,8 +3347,8 @@ I no longer wish to find the light.`, "top-note")
       spicyActiveWordSpans = Array.from(node.querySelectorAll(".spicy-word"));
       const lastWordT = words.length ? Number(words[words.length - 1].t || phrase.t || 0) : Number(phrase.t || 0);
       spicyActivePhraseEnd = Math.max(
-        Number(phrase.end || phrase.t || 0) + 0.52,
-        lastWordT + 0.45
+        Number(phrase.end || phrase.t || 0) + 0.14,
+        lastWordT + 0.18
       );
     }
 
@@ -3372,23 +3372,22 @@ I no longer wish to find the light.`, "top-note")
               : nextT;
             span.classList.toggle("hot", t >= st && t < nt);
           });
-          if (t >= spicyActivePhraseEnd && spicyActivePhrase) {
+          const clearAt = Math.min(spicyActivePhraseEnd, nextT - 0.02);
+          if (t >= clearAt && spicyActivePhrase) {
             const oldNode = spicyActivePhrase;
             oldNode.classList.remove("show");
             oldNode.style.opacity = "0";
             oldNode.style.transform = "translateY(-10px) scale(0.98)";
             window.setTimeout(() => {
               if (oldNode && oldNode.parentElement) oldNode.remove();
-            }, 420);
+            }, 220);
             spicyActivePhrase = null;
             spicyActiveWordSpans = [];
-          } else if (activePhrase && t >= nextT && spicyActivePhrase) {
-            spicyActivePhrase.classList.remove("show");
           }
         }
 
         updateSpicyMedia(t);
-      }, 42);
+      }, 24);
     }
 
     function normalizeSimpleText(text) {
