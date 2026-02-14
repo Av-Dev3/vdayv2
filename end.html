@@ -2131,11 +2131,11 @@
     const spicyAudio = new Audio();
     spicyAudio.preload = "auto";
     let spicyStarted = false;
+    let spicyPhraseIndex = -1;
     let spicyTicker = 0;
     let spicyActivePhrase = null;
     let spicyActiveWordSpans = [];
-    let spicyActiveWordIndex = -1;
-    let spicyRenderedKey = "";
+    let spicyActivePhraseEnd = 0;
     let spicyMediaIndex = -1;
     let spicyMediaSlot = 4;
     let spicyMediaPlan = [];
@@ -3318,78 +3318,75 @@ I no longer wish to find the light.`, "top-note")
       drawSpicyMedia(spicyMediaPlan[idx]);
     }
 
-    function renderSpicyWordWindow(wordEvents, activeIdx, t) {
+    function pushSpicyPhrase(phrase) {
       if (!spicyLyrics) return;
-      if (activeIdx < 0 || activeIdx >= wordEvents.length) {
-        spicyLyrics.innerHTML = "";
-        spicyActivePhrase = null;
-        spicyActiveWordSpans = [];
-        spicyRenderedKey = "";
-        return;
-      }
-
-      const start = Math.max(0, activeIdx - 1);
-      const indices = [];
-      for (let i = start; i < wordEvents.length && indices.length < 5; i += 1) {
-        const dt = Number(wordEvents[i].t || 0) - t;
-        if (indices.length > 0 && dt > 1.2) break;
-        indices.push(i);
-      }
-      if (!indices.includes(activeIdx)) indices.unshift(activeIdx);
-      while (indices.length > 5) indices.pop();
-
-      const key = `${activeIdx}|${indices.join(",")}`;
-      if (key !== spicyRenderedKey) {
-        const node = document.createElement("div");
-        node.className = "spicy-phrase";
-        indices.forEach((wordIdx, i) => {
-          const w = wordEvents[wordIdx];
-          const span = document.createElement("span");
-          span.className = "spicy-word";
-          span.dataset.idx = String(wordIdx);
-          span.textContent = `${w.text}${i < indices.length - 1 ? " " : ""}`;
-          node.appendChild(span);
-        });
-
-        spicyLyrics.innerHTML = "";
-        spicyLyrics.appendChild(node);
-        requestAnimationFrame(() => node.classList.add("show"));
-        spicyActivePhrase = node;
-        spicyActiveWordSpans = Array.from(node.querySelectorAll(".spicy-word"));
-        spicyRenderedKey = key;
-      }
-
-      spicyActiveWordSpans.forEach((span) => {
-        const idx = Number(span.dataset.idx || -1);
-        span.classList.toggle("hot", idx === activeIdx);
+      const node = document.createElement("div");
+      node.className = "spicy-phrase";
+      const words = Array.isArray(phrase.words) ? phrase.words : [];
+      words.forEach((w, i) => {
+        const span = document.createElement("span");
+        span.className = "spicy-word";
+        span.dataset.t = String(w.t);
+        span.textContent = w.text + (i < words.length - 1 ? " " : "");
+        node.appendChild(span);
       });
+
+      if (spicyActivePhrase && spicyActivePhrase.isConnected) {
+        const previousNode = spicyActivePhrase;
+        previousNode.style.opacity = "0";
+        previousNode.style.transform = "translateY(-10px) scale(0.98)";
+        window.setTimeout(() => {
+          if (previousNode && previousNode.parentElement) previousNode.remove();
+        }, 220);
+      }
+
+      spicyLyrics.innerHTML = "";
+      spicyLyrics.appendChild(node);
+      requestAnimationFrame(() => node.classList.add("show"));
+      spicyActivePhrase = node;
+      spicyActiveWordSpans = Array.from(node.querySelectorAll(".spicy-word"));
+      const lastWordT = words.length ? Number(words[words.length - 1].t || phrase.t || 0) : Number(phrase.t || 0);
+      spicyActivePhraseEnd = Math.max(
+        Number(phrase.end || phrase.t || 0) + 0.14,
+        lastWordT + 0.18
+      );
     }
 
-    function runSpicyTicker(wordEvents) {
-      spicyActiveWordIndex = -1;
-      spicyRenderedKey = "";
+    function runSpicyTicker(phrases) {
+      spicyPhraseIndex = -1;
       window.clearInterval(spicyTicker);
       spicyTicker = window.setInterval(() => {
         const t = Number(spicyAudio.currentTime || 0);
-        let idx = spicyActiveWordIndex;
-        while (idx + 1 < wordEvents.length && t >= (wordEvents[idx + 1].t - 0.01)) {
-          idx += 1;
+        while (spicyPhraseIndex + 1 < phrases.length && t >= (phrases[spicyPhraseIndex + 1].t - 0.02)) {
+          spicyPhraseIndex += 1;
+          pushSpicyPhrase(phrases[spicyPhraseIndex]);
         }
-        spicyActiveWordIndex = idx;
 
-        let showIdx = idx;
-        if (idx >= 0) {
-          const curT = Number(wordEvents[idx].t || 0);
-          const nextT = idx + 1 < wordEvents.length ? Number(wordEvents[idx + 1].t || 1e9) : 1e9;
-          const longGap = (nextT - curT) > 0.6;
-          if (longGap && t > curT + 0.35) {
-            showIdx = -1;
+        if (spicyActiveWordSpans.length && spicyPhraseIndex >= 0) {
+          const nextT = spicyPhraseIndex + 1 < phrases.length ? phrases[spicyPhraseIndex + 1].t : 1e9;
+          spicyActiveWordSpans.forEach((span, i) => {
+            const st = Number(span.dataset.t || 0);
+            const nt = i < spicyActiveWordSpans.length - 1
+              ? Number(spicyActiveWordSpans[i + 1].dataset.t || nextT)
+              : nextT;
+            span.classList.toggle("hot", t >= st && t < nt);
+          });
+          const clearAt = Math.min(spicyActivePhraseEnd, nextT - 0.02);
+          if (t >= clearAt && spicyActivePhrase) {
+            const oldNode = spicyActivePhrase;
+            oldNode.classList.remove("show");
+            oldNode.style.opacity = "0";
+            oldNode.style.transform = "translateY(-10px) scale(0.98)";
+            window.setTimeout(() => {
+              if (oldNode && oldNode.parentElement) oldNode.remove();
+            }, 220);
+            spicyActivePhrase = null;
+            spicyActiveWordSpans = [];
           }
         }
 
-        renderSpicyWordWindow(wordEvents, showIdx, t);
         updateSpicyMedia(t);
-      }, 20);
+      }, 24);
     }
 
     function normalizeSimpleText(text) {
@@ -3780,7 +3777,8 @@ I no longer wish to find the light.`, "top-note")
       const lrcText = await fetchText("spicy.lrc");
       const entries = parseLrc(lrcText);
       const words = buildWordEvents(entries);
-      if (!words.length) {
+      const phrases = buildPhraseEvents(words, 3, 5);
+      if (!phrases.length) {
         spicyStarted = false;
         return;
       }
@@ -3802,7 +3800,7 @@ I no longer wish to find the light.`, "top-note")
       if (Number.isFinite(spicyAudio.duration) && spicyAudio.duration > 1) {
         buildSpicyMediaPlan(spicyAudio.duration);
       }
-      runSpicyTicker(words);
+      runSpicyTicker(phrases);
 
       spicyAudio.addEventListener("ended", () => {
         window.clearInterval(spicyTicker);
