@@ -1,4 +1,4 @@
-﻿import { getProgress, resetProgress, setState } from "./state.js";
+﻿import { getProgress, setState } from "./state.js";
 import { mountPassword } from "./scenes/password.js";
 import { mountIntro } from "./scenes/intro.js";
 import { mountClickOpen } from "./scenes/clickopen.js";
@@ -57,18 +57,6 @@ function mount(state) {
   app.innerHTML = "";
   setBodyLock(state);
   const scene = scenes[state] || scenes.password;
-
-  const shell = document.createElement("div");
-  shell.className = "app-shell";
-  const reset = document.createElement("button");
-  reset.className = "btn secondary reset-btn";
-  reset.textContent = "Reset";
-  reset.addEventListener("click", () => {
-    resetProgress();
-    goTo("password");
-  });
-  shell.appendChild(reset);
-  app.appendChild(shell);
 
   cleanup = scene(app, { goTo, config: CONFIG, resolveMedia });
 }
@@ -171,3 +159,4 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
   mountSiteGate(startWithPreScreen);
 });
+
