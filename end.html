@@ -120,43 +120,6 @@
       cursor: pointer;
     }
 
-    .audio-gate .skip-test {
-      margin-top: 10px;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      border-radius: 999px;
-      padding: 10px 18px;
-      background: rgba(20, 20, 20, 0.55);
-      color: #fff;
-      font-size: 0.85rem;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      cursor: pointer;
-    }
-
-    .skip-btn {
-      position: fixed;
-      top: 16px;
-      left: 16px;
-      z-index: 65;
-      border: 1px solid rgba(255, 255, 255, 0.35);
-      border-radius: 999px;
-      padding: 8px 16px;
-      background: rgba(12, 10, 10, 0.6);
-      color: rgba(245, 235, 236, 0.92);
-      font-size: 0.85rem;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      cursor: pointer;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s ease;
-    }
-
-    .skip-btn.show {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
     .scream-layer {
       position: fixed;
       inset: 0;
@@ -880,22 +843,6 @@
       display: block;
     }
 
-    .sboys-skip {
-      position: absolute;
-      top: 16px;
-      left: 16px;
-      z-index: 8;
-      border: 1px solid rgba(255, 255, 255, 0.35);
-      border-radius: 999px;
-      padding: 8px 14px;
-      background: rgba(10, 10, 10, 0.5);
-      color: #fff;
-      font-size: 0.8rem;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      cursor: pointer;
-    }
-
     .sboys-bg {
       position: absolute;
       inset: 0;
@@ -1261,22 +1208,6 @@
       text-align: center;
       z-index: 3;
       pointer-events: none;
-    }
-
-    .spicy-skip {
-      position: absolute;
-      top: 16px;
-      left: 16px;
-      z-index: 8;
-      border: 1px solid rgba(255, 255, 255, 0.35);
-      border-radius: 999px;
-      padding: 8px 14px;
-      background: rgba(10, 10, 10, 0.52);
-      color: #fff;
-      font-size: 0.8rem;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      cursor: pointer;
     }
 
     .spicy-outro {
@@ -1770,7 +1701,6 @@
   <video id="screamLayer" class="scream-layer" playsinline preload="auto"></video>
   <div class="grain"></div>
   <div class="lyric-stage" id="lyricStage"></div>
-  <button class="skip-btn" id="skipBtn" type="button">Skip to End</button>
   <div class="scroll-hint" id="scrollHint">
     <div class="arrow"></div>
     <div>Scroll Down</div>
@@ -1797,7 +1727,6 @@
   <div class="audio-gate" id="audioGate">
     <div style="display:flex;flex-direction:column;align-items:center;">
       <button id="audioStart" type="button">Tap to start</button>
-      <button id="skipToPuzzle" class="skip-test" type="button">Skip to Puzzle</button>
     </div>
   </div>
   <div class="next-screen" id="nextScreen">
@@ -1857,7 +1786,6 @@
     <button class="warning-start" id="warningStartBtn" type="button">Start</button>
   </div>
   <div class="spicy-scene" id="spicyScene">
-    <button id="spicySkipBtn" class="spicy-skip" type="button">Skip to End</button>
     <div class="spicy-media" id="spicyMedia">
       <div class="spicy-layer" id="spicyLayerA"></div>
       <div class="spicy-layer" id="spicyLayerB"></div>
@@ -1911,7 +1839,6 @@
   </div>
   <div class="sboys-blackout" id="sboysBlackout"></div>
   <div class="sboys-scene" id="sboysScene">
-    <button id="sboysSkipBtn" class="sboys-skip" type="button">Skip to End</button>
     <video id="sboysBg" class="sboys-bg" playsinline muted loop preload="auto"></video>
     <div class="sboys-clips">
       <video id="sboysClipA" class="sboys-clip" playsinline muted preload="metadata"></video>
@@ -2038,9 +1965,7 @@
     const grain = document.querySelector(".grain");
     const gate = document.getElementById("audioGate");
     const gateBtn = document.getElementById("audioStart");
-    const skipToPuzzleBtn = document.getElementById("skipToPuzzle");
     const screamLayer = document.getElementById("screamLayer");
-    const skipBtn = document.getElementById("skipBtn");
     const scrollHint = document.getElementById("scrollHint");
     const riddlePanel = document.getElementById("riddlePanel");
     const scratchCanvas = document.getElementById("scratchCanvas");
@@ -2081,14 +2006,12 @@
     const sboysHintBtn = document.getElementById("sboysHintBtn");
     const sboysRiddleHint = document.getElementById("sboysRiddleHint");
     const sboysRiddleStatus = document.getElementById("sboysRiddleStatus");
-    const sboysSkipBtn = document.getElementById("sboysSkipBtn");
     const djNextScreen = document.getElementById("djNextScreen");
     const djScroll = document.getElementById("djScroll");
     const warningScreen = document.getElementById("warningScreen");
     const warningSub = document.getElementById("warningSub");
     const warningStartBtn = document.getElementById("warningStartBtn");
     const spicyScene = document.getElementById("spicyScene");
-    const spicySkipBtn = document.getElementById("spicySkipBtn");
     const spicyLayerA = document.getElementById("spicyLayerA");
     const spicyLayerB = document.getElementById("spicyLayerB");
     const spicyLyrics = document.getElementById("spicyLyrics");
@@ -3024,17 +2947,10 @@ I no longer wish to find the light.`, "top-note")
 
     gateBtn.addEventListener("click", () => {
       gate.style.display = "none";
-      skipBtn.classList.add("show");
       playSequence().catch(() => {
         gate.style.display = "flex";
       });
     });
-
-    if (skipToPuzzleBtn) {
-      skipToPuzzleBtn.addEventListener("click", () => {
-        jumpToRotatingPuzzle();
-      });
-    }
 
     function bindWhiteRotateHandlers() {
       if (whiteRotateHandlersBound) return;
@@ -3985,13 +3901,6 @@ I just want you to know you're doing an amazing job. I'm so proud of you and how
       loop();
     }
 
-    skipBtn.addEventListener("click", () => {
-      if (player && !isNaN(player.duration)) {
-        player.currentTime = Math.max(0, STOP_AT - 5);
-      }
-      skipBtn.classList.remove("show");
-    });
-
     if (whiteStartBtn) {
       whiteStartBtn.addEventListener("click", () => {
         startSboysSequence();
@@ -4010,13 +3919,6 @@ I just want you to know you're doing an amazing job. I'm so proud of you and how
       };
       sboysScene.addEventListener("touchend", onTap);
       sboysScene.addEventListener("click", onTap);
-    }
-
-    if (sboysSkipBtn) {
-      sboysSkipBtn.addEventListener("click", () => {
-        if (!sboysAudio || Number.isNaN(sboysAudio.duration)) return;
-        sboysAudio.currentTime = Math.max(0, sboysAudio.duration - 2);
-      });
     }
 
     if (warningStartBtn) {
@@ -4047,13 +3949,6 @@ I just want you to know you're doing an amazing job. I'm so proud of you and how
         window.setTimeout(() => {
           startSpicyScene();
         }, 5000);
-      });
-    }
-
-    if (spicySkipBtn) {
-      spicySkipBtn.addEventListener("click", () => {
-        if (!spicyAudio || Number.isNaN(spicyAudio.duration)) return;
-        spicyAudio.currentTime = Math.max(0, spicyAudio.duration - 2);
       });
     }
 

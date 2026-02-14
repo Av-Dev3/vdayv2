@@ -74,7 +74,6 @@ export function mountSong(container, ctx) {
       <div class="slide-layer slide-a"></div>
       <div class="slide-layer slide-b"></div>
     </div>
-    <button class="btn secondary skip-btn">Skip</button>
     <div class="lyrics-overlay">
       <div class="lyrics-line current" data-role="current"></div>
     </div>
@@ -84,7 +83,6 @@ export function mountSong(container, ctx) {
   const slideshow = el.querySelector(".slideshow");
   const slideA = el.querySelector(".slide-a");
   const slideB = el.querySelector(".slide-b");
-  const skipBtn = el.querySelector(".skip-btn");
 
   const audio = new Audio(media("assets/song.mp3"));
   audio.preload = "auto";
@@ -250,14 +248,6 @@ export function mountSong(container, ctx) {
   audio.addEventListener("ended", () => {
     if (finished) return;
     finished = true;
-    cleanupSlides();
-    ctx.goTo("envelope");
-  });
-
-  skipBtn.addEventListener("click", () => {
-    if (finished) return;
-    finished = true;
-    audio.pause();
     cleanupSlides();
     ctx.goTo("envelope");
   });
